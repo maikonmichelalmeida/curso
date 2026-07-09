@@ -1,418 +1,321 @@
-# Guia do Lab 01 - SystemVerilog RTL: mismatch, latch e FSM
+# Guia do Lab 01 - primeiro passo com o lab SystemVerilog
 
-Este guia e a ordem de estudo. Os codigos e Tcl tem comentarios detalhados.
-Aqui o foco e dizer quando rodar, o que observar e onde procurar a explicacao.
+Este lab agora segue a direcao correta: pequeno, gradual e baseado no laboratorio
+de SystemVerilog do curso.
 
-## 0. Ideia do lab
+Nesta primeira etapa voce nao vai configurar sintese, constraints ou Tcl. Voce
+vai apenas rodar uma simulacao SystemVerilog que ja vem do material Synopsys e
+entender a organizacao minima.
 
-Este lab foi criado a partir do direcionamento dos cursos:
-
-- SystemVerilog for RTL Design;
-- RTL Design Synthesis;
-- conceitos iniciais de VCS, Verdi e Design Compiler.
-
-O objetivo e construir intuicao antes de mexer no ambiente maior do professor.
-
-Voce vai estudar tres erros classicos:
+## 1. Estrutura que voce deve observar
 
 ```text
-ERRO 01 - sensitivity list incompleta
-ERRO 02 - latch nao intencional
-ERRO 03 - FSM fragil, sem estrutura robusta
+01/
+  rtl/
+    reg_array.sv
+  simulation/
+    Makefile
+    reg_array.f
+    reg_if.v
+    transaction_object.sv
+    Driver.sv
+    Monitor.sv
+    scoreboard.sv
+    env.sv
+    test.sv
+    tb.v
 ```
 
-Cada erro tem duas variantes:
+O que importa agora:
 
 ```text
-CASE=bad   exemplo perigoso
-CASE=good  exemplo corrigido
+rtl/         contem o design que sera testado
+simulation/  contem testbench, classes de verificacao, filelist e Makefile
 ```
 
-O mais importante nao e "passar o teste". O mais importante e entender:
+Esse e o primeiro esqueleto. Ele ainda nao e o ambiente do professor completo.
+E so a primeira camada.
 
-- o que o simulador viu;
-- o que a sintese viu;
-- por que o log acusa determinado problema;
-- por que o codigo correto comunica melhor a intencao.
+## 2. O design: reg_array.sv
 
-## 1. Preparacao no servidor
-
-Entre na pasta:
+Abra:
 
 ```bash
 cd ~/curso/01
+less rtl/reg_array.sv
 ```
 
-Se as ferramentas ainda nao estiverem carregadas, carregue os modulos do seu
-ambiente. No ambiente do professor apareceu algo deste tipo:
+O modulo principal e `reg_ctrl`. Ele representa um pequeno banco de registradores
+controlado por uma interface.
+
+Observe sem tentar decorar:
+
+```text
+reg_if _if
+parameter ADDR_WIDTH
+parameter DATA_WIDTH
+parameter DEPTH
+parameter RESET_VAL
+ctrl[DEPTH]
+ready
+wr
+addr
+wdata
+rdata
+```
+
+A ideia funcional e:
+
+```text
+se reset esta ativo:
+    inicializa a memoria interna com RESET_VAL
+senao, se for escrita valida:
+    grava wdata no endereco addr
+senao, se for leitura valida:
+    devolve ctrl[addr] em rdata
+```
+
+Esse design e pequeno, mas ja mostra uma coisa importante do curso: o DUT pode
+ser ligado ao testbench por uma `interface`.
+
+## 3. A interface: reg_if.v
+
+Abra:
 
 ```bash
-module load syn/W-2024.09-SP5-2 \
-            designcompiler/W-2024.09-SP5-4 \
-            vcs/W-2024.09-SP2-3 \
-            verdi/W-2024.09-SP2-6
+less simulation/reg_if.v
 ```
 
-Se os nomes mudarem no servidor, use os modulos equivalentes disponiveis.
+Uma interface SystemVerilog agrupa sinais que pertencem ao mesmo protocolo.
+Aqui ela junta:
 
-Veja os comandos:
+```text
+rstn
+addr
+wdata
+rdata
+wr
+sel
+ready
+```
+
+Por que isso importa?
+
+Porque as classes de verificacao nao vao manipular fios soltos um por um. Elas
+recebem um `virtual reg_if`, isto e, uma referencia para a interface real do
+testbench.
+
+Por enquanto, guarde apenas esta frase:
+
+```text
+interface e o cabo organizado entre DUT e testbench.
+virtual interface e a forma de uma classe acessar esse cabo.
+```
+
+## 4. O filelist: reg_array.f
+
+Abra:
+
+```bash
+less simulation/reg_array.f
+```
+
+Ele lista os arquivos que o VCS precisa compilar:
+
+```text
+reg_if.v
+../rtl/reg_array.sv
+transaction_object.sv
+Driver.sv
+Monitor.sv
+scoreboard.sv
+env.sv
+test.sv
+tb.v
+```
+
+Nesta etapa, o `reg_array.f` e mais importante que o Makefile.
+
+O Makefile so chama:
+
+```bash
+vcs -sverilog -f reg_array.f
+```
+
+O `-f reg_array.f` significa: "VCS, leia a lista de arquivos daqui".
+
+## 5. O Makefile desta etapa
+
+Abra:
+
+```bash
+less simulation/Makefile
+```
+
+Ele e pequeno de proposito. Os comandos sao:
+
+```bash
+make help
+make comp
+make sim
+make test
+make waves
+make clean
+```
+
+Nesta primeira aula, Makefile significa apenas:
+
+```text
+um arquivo que guarda comandos repetitivos com nomes curtos
+```
+
+Exemplo:
+
+```text
+make comp
+```
+
+substitui:
+
+```bash
+vcs -sverilog -f reg_array.f -debug_access+all -kdb -l comp.log
+```
+
+Nao tente aprender Makefile inteiro agora. Aprenda so a ideia de alvo:
+
+```text
+alvo:
+    comando que sera executado
+```
+
+## 6. Ordem cronologica para rodar
+
+No servidor:
+
+```bash
+cd ~/curso
+git pull --ff-only origin main
+cd 01/simulation
+```
+
+Se necessario, carregue as ferramentas:
+
+```bash
+module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6
+```
+
+Veja ajuda:
 
 ```bash
 make help
 ```
 
-Cheque ferramentas:
+Compile:
 
 ```bash
-make doctor
-```
-
-O `doctor` deve encontrar pelo menos:
-
-- `vcs`;
-- `verdi`;
-- `dc_shell`;
-- biblioteca SAED em `SAED_REF`.
-
-Se a biblioteca nao estiver no caminho default, rode com:
-
-```bash
-make doctor SAED_REF=/caminho/para/ref
-```
-
-Depois repita os outros comandos usando o mesmo `SAED_REF=...`.
-
-## 2. ERRO 01 - sensitivity list incompleta
-
-Arquivos principais:
-
-```text
-rtl/01_sensitivity_bad.sv
-rtl/01_sensitivity_good.sv
-tb/tb_01_sensitivity.sv
-```
-
-Leia primeiro:
-
-```bash
-less rtl/01_sensitivity_bad.sv
-less rtl/01_sensitivity_good.sv
-less tb/tb_01_sensitivity.sv
-```
-
-### 2.1 Simule o codigo ruim
-
-```bash
-make sim EX=01 CASE=bad
-```
-
-O que observar no log:
-
-```bash
-less logs/01_bad/vcs_run.log
-```
-
-Procure o trecho em que o testbench muda somente `c`.
-
-O esperado pelo circuito e:
-
-```systemverilog
-y = (a & b) | c;
-```
-
-Mas no codigo ruim:
-
-```systemverilog
-always @(a or b)
-```
-
-O sinal `c` foi esquecido na lista de sensibilidade.
-
-Resultado esperado:
-
-```text
-TEST_RESULT: FAIL
-```
-
-Isso e bom para estudo: o erro foi revelado.
-
-### 2.2 Abra a waveform
-
-```bash
-make waves EX=01 CASE=bad
-```
-
-Observe:
-
-- `c` muda;
-- `a` e `b` nao mudam;
-- `y` nao atualiza no momento correto.
-
-### 2.3 Simule o codigo correto
-
-```bash
-make sim EX=01 CASE=good
-```
-
-Agora o codigo usa:
-
-```systemverilog
-always_comb
-```
-
-Resultado esperado:
-
-```text
-TEST_RESULT: PASS
-```
-
-### 2.4 Sintetize as duas versoes
-
-```bash
-make synth EX=01 CASE=bad
-make synth EX=01 CASE=good
+make comp
 ```
 
 O que observar:
 
 ```bash
-less logs/01_bad/dc_synth.log
-less logs/01_good/dc_synth.log
-less outputs/01_bad/sensitivity_dut_mapped.v
-less outputs/01_good/sensitivity_dut_mapped.v
+less comp.log
 ```
 
-Ponto central:
-
-O sintetizador tende a implementar a expressao completa usando `a`, `b` e `c`,
-mesmo que a simulacao RTL ruim nao atualize quando `c` muda sozinho.
-
-Essa e a ideia de mismatch entre simulacao e sintese.
-
-### 2.5 Simule gate-level
-
-Depois da sintese:
-
-```bash
-make gate EX=01 CASE=bad
-make gate EX=01 CASE=good
-```
-
-Compare:
-
-```bash
-less logs/01_bad/vcs_run.log
-less logs/01_bad/gate_run.log
-```
-
-Pergunta para voce responder:
+Procure erros de compilacao. Se compilar, o VCS deve gerar o executavel:
 
 ```text
-A simulacao RTL ruim falhou, mas a gate-level passou?
-Se sim, por que isso prova mismatch?
+simv
 ```
 
-## 3. ERRO 02 - latch nao intencional
-
-Arquivos:
-
-```text
-rtl/02_latch_bad.sv
-rtl/02_latch_good.sv
-tb/tb_02_latch.sv
-```
-
-Leia:
+Simule:
 
 ```bash
-less rtl/02_latch_bad.sv
-less rtl/02_latch_good.sv
-```
-
-### 3.1 Simule o codigo ruim
-
-```bash
-make sim EX=02 CASE=bad
-```
-
-Observe:
-
-```bash
-less logs/02_bad/vcs_run.log
-```
-
-Ponto central:
-
-Quando `sel=0`, o codigo ruim nao atribui `y`.
-
-Entao `y` retem o valor anterior. Esse "reter valor" nao e combinacional puro:
-isso e comportamento de latch.
-
-### 3.2 Simule o codigo correto
-
-```bash
-make sim EX=02 CASE=good
-```
-
-No codigo correto, existe default:
-
-```systemverilog
-y = 1'b0;
-```
-
-Depois o `if (sel)` sobrescreve quando necessario.
-
-### 3.3 Sintetize e procure latch
-
-```bash
-make synth EX=02 CASE=bad
-make synth EX=02 CASE=good
-```
-
-Leia:
-
-```bash
-less logs/02_bad/dc_synth.log
-less rpt/02_bad/latch_dut_check_design_post.rpt
-less outputs/02_bad/latch_dut_mapped.v
-```
-
-O que procurar:
-
-- mensagens sobre latch;
-- celulas de latch na netlist;
-- diferenca entre `bad` e `good`.
-
-Pergunta:
-
-```text
-O erro apareceu na simulacao, na sintese ou nos dois?
-```
-
-## 4. ERRO 03 - FSM fragil
-
-Arquivos:
-
-```text
-rtl/03_fsm_bad.sv
-rtl/03_fsm_good.sv
-tb/tb_03_fsm.sv
-```
-
-Leia:
-
-```bash
-less rtl/03_fsm_bad.sv
-less rtl/03_fsm_good.sv
-```
-
-### 4.1 Simule o codigo ruim
-
-```bash
-make sim EX=03 CASE=bad
-```
-
-Esse caso pode passar na simulacao.
-
-Isso e proposital.
-
-Licao:
-
-```text
-Nem todo problema de qualidade RTL aparece como erro funcional no testbench.
-```
-
-### 4.2 Simule o codigo correto
-
-```bash
-make sim EX=03 CASE=good
-```
-
-Observe no codigo correto:
-
-```systemverilog
-typedef enum logic [1:0]
-always_ff
-always_comb
-next_state = state;
-unique case
-default
-```
-
-Esses elementos deixam a intencao mais clara para humano, simulador e sintese.
-
-### 4.3 Sintetize e compare logs
-
-```bash
-make synth EX=03 CASE=bad
-make synth EX=03 CASE=good
-```
-
-Leia:
-
-```bash
-less logs/03_bad/dc_synth.log
-less logs/03_good/dc_synth.log
-less rpt/03_bad/fsm_dut_check_design_post.rpt
-less rpt/03_good/fsm_dut_check_design_post.rpt
+make sim
 ```
 
 O que observar:
 
-- `bad` tem caminhos sem atribuicao de `next_state`;
-- `good` usa default seguro;
-- `enum` facilita leitura;
-- `always_ff` separa sequencial;
-- `always_comb` separa combinacional.
-
-## 5. Ordem recomendada completa
-
-Rode nesta ordem:
-
 ```bash
-make sim EX=01 CASE=bad
-make sim EX=01 CASE=good
-make synth EX=01 CASE=bad
-make synth EX=01 CASE=good
-make gate EX=01 CASE=bad
-make gate EX=01 CASE=good
-
-make sim EX=02 CASE=bad
-make sim EX=02 CASE=good
-make synth EX=02 CASE=bad
-make synth EX=02 CASE=good
-
-make sim EX=03 CASE=bad
-make sim EX=03 CASE=good
-make synth EX=03 CASE=bad
-make synth EX=03 CASE=good
+less sim.log
 ```
 
-## 6. O que anotar no seu caderno
-
-Para cada erro, anote:
+Procure mensagens das classes:
 
 ```text
-1. Qual era a intencao do hardware?
-2. Qual linha do codigo ruim nao comunica essa intencao?
-3. A simulacao RTL falhou?
-4. A sintese mostrou warning ou inferiu algo perigoso?
-5. O codigo correto resolve com qual tecnica?
-6. Como isso se aplica ao meu projeto maior?
+Driver
+Monitor
+Scoreboard
 ```
 
-## 7. Ponte para o ambiente do professor
+Abra waveform:
 
-Depois deste lab, o proximo passo natural e revisar o bloco `RTL_LAB2` no
-ambiente do professor procurando:
+```bash
+make waves
+```
 
-- listas de sensibilidade antigas;
-- combinacional sem default;
-- FSM sem `enum`;
-- mistura de sequencial e combinacional;
-- pontos onde RTL e gate-level poderiam divergir;
-- constraints basicas para DC NXT.
+Se o Verdi abrir, procure:
 
-Este lab e pequeno de proposito. Ele prepara sua cabeca para entender melhor
-o que o professor quer quando fala de usar o ambiente, mexer em constraints
-e observar as ferramentas.
+```text
+tb._if.addr
+tb._if.wdata
+tb._if.rdata
+tb._if.wr
+tb._if.sel
+tb._if.ready
+```
+
+## 7. O que nao precisa entender ainda
+
+Nao precisa dominar ainda:
+
+```text
+mailbox
+scoreboard
+classe env
+randomize
+fork/join
+```
+
+Eles aparecem porque o lab ja e mais avancado que uma simulacao manual. Mas o
+nosso estudo vai subir um degrau por vez.
+
+Nesta etapa, voce so precisa entender:
+
+```text
+DUT em rtl/
+testbench em simulation/
+filelist dizendo a ordem dos arquivos
+Makefile encurtando compilar e simular
+Verdi abrindo a waveform
+```
+
+## 8. Perguntas de verificacao
+
+Depois de rodar, responda:
+
+```text
+1. Qual arquivo contem o DUT?
+2. Qual arquivo contem o top do testbench?
+3. Qual arquivo lista tudo que o VCS compila?
+4. Qual comando cria o simv?
+5. Qual comando roda o simv?
+6. Qual arquivo de log mostra erro de compilacao?
+7. Qual arquivo de log mostra a execucao da simulacao?
+```
+
+Se essas sete respostas ficarem claras, o Lab 01 cumpriu o papel.
+
+## 9. Proximo passo
+
+O Lab 02 deve ser pequeno tambem.
+
+Sugestao para o proximo passo:
+
+```text
+separar melhor o testbench em camadas:
+transaction -> driver -> monitor -> scoreboard -> env -> test -> tb
+```
+
+Ou seja, antes de mexer em sintese, vamos entender a arquitetura de verificacao
+que o proprio lab SystemVerilog ja trouxe.

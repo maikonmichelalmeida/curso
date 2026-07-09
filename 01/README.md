@@ -1,45 +1,35 @@
-# 01 - SystemVerilog RTL: mismatch, latch e FSM
+# 01 - SystemVerilog lab, primeiro contato
 
-Este lab transforma o primeiro bloco util do curso em um estudo comparativo.
+Este primeiro passo usa o lab de SystemVerilog do material Synopsys.
 
-Ele nao e apenas uma copia do lab da Synopsys. A ideia aqui e:
+Por enquanto o objetivo e pequeno:
 
-- manter exemplos ruins e corretos lado a lado;
-- rodar simulacao RTL;
-- rodar sintese;
-- comparar com simulacao gate-level quando a sintese gerar netlist;
-- ler comentarios no codigo e no Tcl;
-- seguir o roteiro cronologico em `docs/guia_lab.md`.
+1. entender a pasta `rtl`;
+2. entender a pasta `simulation`;
+3. entender o `reg_array.f`;
+4. usar um Makefile simples para compilar e simular com VCS;
+5. abrir a waveform no Verdi.
 
-## Exemplos
+Ainda nao entramos em:
 
-```text
-ERRO 01 - sensitivity list incompleta
-ERRO 02 - latch nao intencional
-ERRO 03 - FSM sem estrutura robusta
-```
+- Design Compiler;
+- DC_NXT;
+- constraints SDC;
+- Tcl de sintese;
+- ambiente completo do professor.
 
-Cada exemplo tem pelo menos duas variantes:
-
-```text
-bad   codigo propositalmente perigoso
-good  codigo corrigido
-```
-
-## Comece por aqui
-
-No servidor:
+Comece por:
 
 ```bash
-cd ~/curso/01
+cd ~/curso/01/simulation
 make help
-make doctor
-make sim EX=01 CASE=bad
-make sim EX=01 CASE=good
+make comp
+make sim
+make waves
 ```
 
-Depois siga:
+Leia o roteiro em:
 
-```text
-docs/guia_lab.md
+```bash
+less ../docs/guia_lab.md
 ```
