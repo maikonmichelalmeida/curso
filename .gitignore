@@ -1,0 +1,68 @@
+# ==============================================================================
+# Arquivos gerados por simulacao VCS / Verdi
+# ==============================================================================
+simv
+simv_*
+simv.daidir/
+*.daidir/
+csrc/
+*.log
+*.fsdb
+*.vpd
+*.vcd
+*.vdb/
+*.key
+ucli.key
+novas.conf
+novas.rc
+novas_dump.log
+verdiLog/
+AN.DB/
+DVEfiles/
+*.ses
+*.ses.*
+
+# ==============================================================================
+# Artefatos gerados por sintese / Formality / Fusion Compiler
+# ==============================================================================
+**/run/*
+**/.run/*
+**/work/
+**/work_*/
+**/alib-*/
+**/*.dlib/
+**/TOP.dlib/
+**/mapped/
+**/unmapped/
+**/outputs/
+**/rpt/
+**/reports/
+**/logs/
+**/formality_svf/
+**/FM_INFO/
+*.ddc
+*.svf
+*.sdf
+*.saif
+*.spef
+*.lib
+
+# ==============================================================================
+# Temporarios locais
+# ==============================================================================
+.vscode/
+.idea/
+desktop.ini
+Thumbs.db
+*.tmp
+*.bak
+*.orig
+
+# ==============================================================================
+# Arquivos grandes de material bruto devem ficar fora deste repo de labs.
+# Se precisar versionar um guia pequeno e essencial, remova a regra localmente.
+# ==============================================================================
+*.docx
+*.pdf
+*.tar.gz
+*.zip
