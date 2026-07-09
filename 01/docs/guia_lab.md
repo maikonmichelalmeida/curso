@@ -1,32 +1,41 @@
-# Guia do Lab 01 - aprendendo o esqueleto do ambiente
+# Guia do Lab 01 - SystemVerilog RTL: mismatch, latch e FSM
 
-Este lab foi refeito para ficar alinhado com os labs Synopsys e com o ambiente
-do professor. O objetivo agora nao e comecar por exemplos de erro em
-SystemVerilog. O objetivo e entender como um bloco RTL fica organizado para ser
-simulado, sintetizado e depois reaproveitado.
+Este guia e a ordem de estudo. Os codigos e Tcl tem comentarios detalhados.
+Aqui o foco e dizer quando rodar, o que observar e onde procurar a explicacao.
 
-Pense neste lab como uma miniatura controlada do ambiente do professor.
+## 0. Ideia do lab
 
-## 1. O que voce deve aprender neste lab
+Este lab foi criado a partir do direcionamento dos cursos:
 
-Ao final, voce deve conseguir responder:
+- SystemVerilog for RTL Design;
+- RTL Design Synthesis;
+- conceitos iniciais de VCS, Verdi e Design Compiler.
+
+O objetivo e construir intuicao antes de mexer no ambiente maior do professor.
+
+Voce vai estudar tres erros classicos:
 
 ```text
-1. Onde fica o RTL?
-2. Onde fica o testbench?
-3. Para que serve um filelist?
-4. Por que o Makefile da raiz chama outros Makefiles?
-5. Onde ficam os arquivos gerados pela simulacao?
-6. Onde ficam os relatorios e netlists gerados pela sintese?
-7. O que o arquivo SDC esta dizendo para o Design Compiler?
-8. O que o Tcl de sintese faz, passo a passo?
+ERRO 01 - sensitivity list incompleta
+ERRO 02 - latch nao intencional
+ERRO 03 - FSM fragil, sem estrutura robusta
 ```
 
-Essas perguntas sao mais importantes agora do que escrever um processador ou um
-testbench sofisticado. O professor esta enfatizando o ambiente e as constraints;
-entao o primeiro passo bom e dominar a infraestrutura minima.
+Cada erro tem duas variantes:
 
-## 2. A estrutura do bloco
+```text
+CASE=bad   exemplo perigoso
+CASE=good  exemplo corrigido
+```
+
+O mais importante nao e "passar o teste". O mais importante e entender:
+
+- o que o simulador viu;
+- o que a sintese viu;
+- por que o log acusa determinado problema;
+- por que o codigo correto comunica melhor a intencao.
+
+## 1. Preparacao no servidor
 
 Entre na pasta:
 
@@ -34,481 +43,376 @@ Entre na pasta:
 cd ~/curso/01
 ```
 
-Veja a estrutura:
+Se as ferramentas ainda nao estiverem carregadas, carregue os modulos do seu
+ambiente. No ambiente do professor apareceu algo deste tipo:
 
 ```bash
-make show
+module load syn/W-2024.09-SP5-2 \
+            designcompiler/W-2024.09-SP5-4 \
+            vcs/W-2024.09-SP2-3 \
+            verdi/W-2024.09-SP2-6
 ```
 
-Voce deve enxergar mentalmente isto:
+Se os nomes mudarem no servidor, use os modulos equivalentes disponiveis.
 
-```text
-01/
-  Makefile
-  rtl/
-    lab01_top.sv
-  verif/
-    top_tb.sv
-    filelist.f
-    filelist_rtl.f
-  constraints/
-    constraints.sdc
-  tools/
-    vcs/
-      scripts/Makefile
-      run/
-    dc_nxt/
-      scripts/Makefile
-      scripts/setup.tcl
-      scripts/synth.tcl
-      run/
-      outputs/
-      rpt/
-```
-
-A regra central e simples:
-
-```text
-codigo humano de entrada       -> rtl, verif, constraints, scripts
-arquivos gerados por ferramenta -> run, outputs, rpt
-```
-
-Isso evita misturar fonte com lixo de simulacao/sintese.
-
-## 3. Makefile da raiz
-
-Abra:
-
-```bash
-less Makefile
-```
-
-Este Makefile e parecido com o do professor no papel principal: ele e um
-orquestrador. Ele nao chama `vcs` diretamente e nao chama `dcnxt_shell`
-diretamente. Ele entra na pasta da ferramenta e delega:
-
-```text
-make sim   -> tools/vcs/scripts/Makefile
-make synth -> tools/dc_nxt/scripts/Makefile
-```
-
-Isso parece burocracia no inicio, mas tem uma vantagem enorme: quando o projeto
-cresce, cada ferramenta tem seu proprio lugar.
-
-Rode:
+Veja os comandos:
 
 ```bash
 make help
 ```
 
-Observe as variaveis:
-
-```text
-USE_MODULES
-SAED_REF
-MODULES
-```
-
-### USE_MODULES
-
-Se `USE_MODULES=1`, o Makefile tenta carregar os modulos Synopsys antes de rodar.
-Isso imita o ambiente do professor:
-
-```bash
-make sim
-```
-
-Se voce ja carregou os modulos manualmente, pode evitar o carregamento automatico:
-
-```bash
-make sim USE_MODULES=0
-```
-
-### SAED_REF
-
-`SAED_REF` aponta para a pasta da biblioteca tecnologica SAED. A sintese precisa
-dela porque o DC_NXT nao transforma RTL em "portas abstratas"; ele mapeia o RTL
-para celulas reais de uma biblioteca.
-
-Cheque:
+Cheque ferramentas:
 
 ```bash
 make doctor
 ```
 
-Se aparecer que `SAED_REF` nao foi encontrado, rode a sintese informando o caminho:
+O `doctor` deve encontrar pelo menos:
+
+- `vcs`;
+- `verdi`;
+- `dc_shell`;
+- biblioteca SAED em `SAED_REF`.
+
+Se a biblioteca nao estiver no caminho default, rode com:
 
 ```bash
-make synth SAED_REF=/caminho/para/ref
+make doctor SAED_REF=/caminho/para/ref
 ```
 
-O importante e que dentro de `ref` existam subpastas como:
+Depois repita os outros comandos usando o mesmo `SAED_REF=...`.
+
+## 2. ERRO 01 - sensitivity list incompleta
+
+Arquivos principais:
 
 ```text
-DBs/
-CLIBs/
-tech/
-verilog/
+rtl/01_sensitivity_bad.sv
+rtl/01_sensitivity_good.sv
+tb/tb_01_sensitivity.sv
 ```
 
-## 4. RTL pequeno: lab01_top.sv
-
-Abra:
+Leia primeiro:
 
 ```bash
-less rtl/lab01_top.sv
+less rtl/01_sensitivity_bad.sv
+less rtl/01_sensitivity_good.sv
+less tb/tb_01_sensitivity.sv
 ```
 
-O design e propositalmente pequeno: um contador registrador com `clk`, `rst_n`,
-`enable`, `load`, direcao de contagem e flags.
-
-Por que um contador?
-
-Porque ele tem quase tudo que precisamos para treinar o ambiente:
-
-```text
-clock
-reset
-registrador
-entrada de controle
-entrada de dados
-saida de dados
-logica combinacional simples
-```
-
-O objetivo nao e impressionar no RTL. O objetivo e ter um design pequeno para
-enxergar claramente o que VCS, SDC e DC_NXT fazem.
-
-## 5. Testbench e waveform
-
-Abra:
+### 2.1 Simule o codigo ruim
 
 ```bash
-less verif/top_tb.sv
+make sim EX=01 CASE=bad
 ```
 
-O testbench faz quatro coisas:
+O que observar no log:
 
-```text
-1. gera clock;
-2. aplica reset;
-3. testa load;
-4. testa contagem para cima e para baixo.
+```bash
+less logs/01_bad/vcs_run.log
 ```
 
-Ele tambem gera waveform FSDB:
+Procure o trecho em que o testbench muda somente `c`.
+
+O esperado pelo circuito e:
 
 ```systemverilog
-$fsdbDumpfile("top_rtl.fsdb");
-$fsdbDumpvars(0, top_tb);
+y = (a & b) | c;
 ```
 
-No ambiente com Verdi, isso permite abrir a simulacao depois.
+Mas no codigo ruim:
 
-## 6. Filelist: o mapa de entrada da ferramenta
-
-Abra:
-
-```bash
-less verif/filelist.f
+```systemverilog
+always @(a or b)
 ```
 
-O `filelist.f` e uma lista de arquivos para o VCS. Em vez de digitar todos os
-arquivos na linha de comando, o Makefile diz:
+O sinal `c` foi esquecido na lista de sensibilidade.
 
-```bash
-vcs -f ../../../verif/filelist.f
-```
-
-Dentro do filelist existem:
+Resultado esperado:
 
 ```text
-+incdir+../../../rtl
-+incdir+../../../verif
-../../../rtl/lab01_top.sv
-../../../verif/top_tb.sv
+TEST_RESULT: FAIL
 ```
 
-Essa estrutura vem dos labs Synopsys e do ambiente do professor.
+Isso e bom para estudo: o erro foi revelado.
 
-Tambem existe:
+### 2.2 Abra a waveform
 
 ```bash
-less verif/filelist_rtl.f
+make waves EX=01 CASE=bad
 ```
 
-Esse segundo filelist e usado pela sintese. Ele contem apenas o design, sem o
-testbench. Isso deixa o fluxo mais didatico: VCS ve design + testbench; DC_NXT
-ve apenas design sintetizavel.
+Observe:
 
-## 7. Rodando simulacao RTL
+- `c` muda;
+- `a` e `b` nao mudam;
+- `y` nao atualiza no momento correto.
 
-Rode:
+### 2.3 Simule o codigo correto
 
 ```bash
-make sim
+make sim EX=01 CASE=good
 ```
 
-O caminho executado e:
+Agora o codigo usa:
 
-```text
-Makefile da raiz
-  -> tools/vcs/scripts/Makefile
-     -> cria tools/vcs/run
-     -> entra em tools/vcs/run
-     -> chama vcs
-     -> executa ./simv
+```systemverilog
+always_comb
 ```
 
-Veja os arquivos gerados:
-
-```bash
-ls tools/vcs/run
-```
-
-Arquivos importantes:
-
-```text
-vcs_compile.log  log da compilacao
-vcs_run.log      log da simulacao
-simv             executavel gerado pelo VCS
-top_rtl.fsdb     waveform para o Verdi
-```
-
-Leia o log:
-
-```bash
-less tools/vcs/run/vcs_run.log
-```
-
-Procure:
+Resultado esperado:
 
 ```text
 TEST_RESULT: PASS
 ```
 
-## 8. Abrindo waveform
-
-Depois da simulacao:
+### 2.4 Sintetize as duas versoes
 
 ```bash
-make waves
+make synth EX=01 CASE=bad
+make synth EX=01 CASE=good
 ```
 
-No Verdi, observe primeiro estes sinais:
+O que observar:
+
+```bash
+less logs/01_bad/dc_synth.log
+less logs/01_good/dc_synth.log
+less outputs/01_bad/sensitivity_dut_mapped.v
+less outputs/01_good/sensitivity_dut_mapped.v
+```
+
+Ponto central:
+
+O sintetizador tende a implementar a expressao completa usando `a`, `b` e `c`,
+mesmo que a simulacao RTL ruim nao atualize quando `c` muda sozinho.
+
+Essa e a ideia de mismatch entre simulacao e sintese.
+
+### 2.5 Simule gate-level
+
+Depois da sintese:
+
+```bash
+make gate EX=01 CASE=bad
+make gate EX=01 CASE=good
+```
+
+Compare:
+
+```bash
+less logs/01_bad/vcs_run.log
+less logs/01_bad/gate_run.log
+```
+
+Pergunta para voce responder:
 
 ```text
-clk
-rst_n
-enable
-load
-up
-load_value
-count
-at_zero
-at_max
+A simulacao RTL ruim falhou, mas a gate-level passou?
+Se sim, por que isso prova mismatch?
 ```
 
-Nao tente olhar tudo de uma vez. A ordem boa e:
+## 3. ERRO 02 - latch nao intencional
+
+Arquivos:
 
 ```text
-1. reset coloca count em zero?
-2. load carrega 8'h3c?
-3. enable=1 e up=1 incrementa?
-4. up=0 decrementa?
-5. at_zero e at_max fazem sentido?
+rtl/02_latch_bad.sv
+rtl/02_latch_good.sv
+tb/tb_02_latch.sv
 ```
 
-## 9. Constraints: o primeiro contato com SDC
-
-Abra:
+Leia:
 
 ```bash
-less constraints/constraints.sdc
+less rtl/02_latch_bad.sv
+less rtl/02_latch_good.sv
 ```
 
-Este arquivo e o ponto mais importante do lab para a fala do professor.
+### 3.1 Simule o codigo ruim
 
-RTL descreve o circuito. SDC descreve o contexto em que o circuito precisa
-funcionar.
+```bash
+make sim EX=02 CASE=bad
+```
 
-Neste lab, o SDC informa:
+Observe:
+
+```bash
+less logs/02_bad/vcs_run.log
+```
+
+Ponto central:
+
+Quando `sel=0`, o codigo ruim nao atribui `y`.
+
+Entao `y` retem o valor anterior. Esse "reter valor" nao e combinacional puro:
+isso e comportamento de latch.
+
+### 3.2 Simule o codigo correto
+
+```bash
+make sim EX=02 CASE=good
+```
+
+No codigo correto, existe default:
+
+```systemverilog
+y = 1'b0;
+```
+
+Depois o `if (sel)` sobrescreve quando necessario.
+
+### 3.3 Sintetize e procure latch
+
+```bash
+make synth EX=02 CASE=bad
+make synth EX=02 CASE=good
+```
+
+Leia:
+
+```bash
+less logs/02_bad/dc_synth.log
+less rpt/02_bad/latch_dut_check_design_post.rpt
+less outputs/02_bad/latch_dut_mapped.v
+```
+
+O que procurar:
+
+- mensagens sobre latch;
+- celulas de latch na netlist;
+- diferenca entre `bad` e `good`.
+
+Pergunta:
 
 ```text
-1. existe um clock chamado core_clk no pino clk;
-2. o periodo do clock e 10 ns;
-3. existe incerteza de clock;
-4. entradas chegam depois de certa margem;
-5. saidas precisam ficar prontas antes de certa margem;
-6. as saidas enxergam uma carga;
-7. reset nao deve ser tratado como caminho normal de timing.
+O erro apareceu na simulacao, na sintese ou nos dois?
 ```
 
-Sem constraints, o sintetizador ate consegue mapear logica, mas nao sabe qual e
-a meta de timing. Com constraints, ele sabe o "contrato" que deve tentar cumprir.
+## 4. ERRO 03 - FSM fragil
 
-## 10. Setup do DC_NXT
-
-Abra:
-
-```bash
-less tools/dc_nxt/scripts/setup.tcl
-```
-
-Esse arquivo configura caminhos e bibliotecas:
+Arquivos:
 
 ```text
-DESIGN_NAME       nome do top sintetizado
-RTL_FILELIST      lista de RTL para a sintese
-SDC_FILE          constraints
-SAED_REF          raiz da biblioteca SAED
-target_library    celulas que o DC_NXT pode escolher
-link_library      bibliotecas para resolver referencias
-search_path       onde procurar arquivos
+rtl/03_fsm_bad.sv
+rtl/03_fsm_good.sv
+tb/tb_03_fsm.sv
 ```
 
-Essa separacao e proposital:
+Leia:
+
+```bash
+less rtl/03_fsm_bad.sv
+less rtl/03_fsm_good.sv
+```
+
+### 4.1 Simule o codigo ruim
+
+```bash
+make sim EX=03 CASE=bad
+```
+
+Esse caso pode passar na simulacao.
+
+Isso e proposital.
+
+Licao:
 
 ```text
-setup.tcl  -> onde estao as coisas
-synth.tcl  -> o que fazer com essas coisas
+Nem todo problema de qualidade RTL aparece como erro funcional no testbench.
 ```
 
-## 11. Fluxo de sintese
-
-Abra:
+### 4.2 Simule o codigo correto
 
 ```bash
-less tools/dc_nxt/scripts/synth.tcl
+make sim EX=03 CASE=good
 ```
 
-O fluxo e curto:
+Observe no codigo correto:
+
+```systemverilog
+typedef enum logic [1:0]
+always_ff
+always_comb
+next_state = state;
+unique case
+default
+```
+
+Esses elementos deixam a intencao mais clara para humano, simulador e sintese.
+
+### 4.3 Sintetize e compare logs
+
+```bash
+make synth EX=03 CASE=bad
+make synth EX=03 CASE=good
+```
+
+Leia:
+
+```bash
+less logs/03_bad/dc_synth.log
+less logs/03_good/dc_synth.log
+less rpt/03_bad/fsm_dut_check_design_post.rpt
+less rpt/03_good/fsm_dut_check_design_post.rpt
+```
+
+O que observar:
+
+- `bad` tem caminhos sem atribuicao de `next_state`;
+- `good` usa default seguro;
+- `enum` facilita leitura;
+- `always_ff` separa sequencial;
+- `always_comb` separa combinacional.
+
+## 5. Ordem recomendada completa
+
+Rode nesta ordem:
+
+```bash
+make sim EX=01 CASE=bad
+make sim EX=01 CASE=good
+make synth EX=01 CASE=bad
+make synth EX=01 CASE=good
+make gate EX=01 CASE=bad
+make gate EX=01 CASE=good
+
+make sim EX=02 CASE=bad
+make sim EX=02 CASE=good
+make synth EX=02 CASE=bad
+make synth EX=02 CASE=good
+
+make sim EX=03 CASE=bad
+make sim EX=03 CASE=good
+make synth EX=03 CASE=bad
+make synth EX=03 CASE=good
+```
+
+## 6. O que anotar no seu caderno
+
+Para cada erro, anote:
 
 ```text
-1. source setup.tcl
-2. analyze RTL
-3. elaborate top
-4. link com biblioteca
-5. check_design
-6. source constraints.sdc
-7. check_timing
-8. compile_ultra
-9. gerar relatorios
-10. exportar netlist, ddc, sdc final e sdf
+1. Qual era a intencao do hardware?
+2. Qual linha do codigo ruim nao comunica essa intencao?
+3. A simulacao RTL falhou?
+4. A sintese mostrou warning ou inferiu algo perigoso?
+5. O codigo correto resolve com qual tecnica?
+6. Como isso se aplica ao meu projeto maior?
 ```
 
-Esse e o coracao do que voce precisa entender antes de brincar com constraints.
+## 7. Ponte para o ambiente do professor
 
-## 12. Rodando sintese
+Depois deste lab, o proximo passo natural e revisar o bloco `RTL_LAB2` no
+ambiente do professor procurando:
 
-Primeiro cheque:
+- listas de sensibilidade antigas;
+- combinacional sem default;
+- FSM sem `enum`;
+- mistura de sequencial e combinacional;
+- pontos onde RTL e gate-level poderiam divergir;
+- constraints basicas para DC NXT.
 
-```bash
-make doctor
-```
-
-Se a biblioteca estiver correta:
-
-```bash
-make synth
-```
-
-Se precisar informar o caminho:
-
-```bash
-make synth SAED_REF=/caminho/para/ref
-```
-
-Depois veja:
-
-```bash
-ls tools/dc_nxt/run
-ls tools/dc_nxt/rpt
-ls tools/dc_nxt/outputs
-```
-
-Arquivos importantes:
-
-```text
-tools/dc_nxt/run/dc_synth.log
-tools/dc_nxt/rpt/lab01_top_area.rpt
-tools/dc_nxt/rpt/lab01_top_timing.rpt
-tools/dc_nxt/rpt/lab01_top_qor.rpt
-tools/dc_nxt/outputs/lab01_top_mapped.v
-tools/dc_nxt/outputs/lab01_top_final.sdc
-tools/dc_nxt/outputs/lab01_top_delays.sdf
-```
-
-## 13. O que observar nos relatorios
-
-Comece por:
-
-```bash
-less tools/dc_nxt/rpt/lab01_top_qor.rpt
-less tools/dc_nxt/rpt/lab01_top_timing.rpt
-less tools/dc_nxt/rpt/lab01_top_area.rpt
-```
-
-Perguntas:
-
-```text
-1. A sintese terminou sem erro?
-2. O DC_NXT encontrou a biblioteca?
-3. O clock core_clk apareceu no timing?
-4. Existe violacao de timing?
-5. Quantas celulas foram usadas?
-6. A netlist mapeada tem celulas SAED?
-```
-
-Abra a netlist:
-
-```bash
-less tools/dc_nxt/outputs/lab01_top_mapped.v
-```
-
-Voce deve ver que o RTL comportamental virou instancias de celulas.
-
-## 14. Ordem cronologica recomendada
-
-Use esta ordem na primeira execucao:
-
-```bash
-cd ~/curso/01
-make help
-make show
-make doctor
-
-less rtl/lab01_top.sv
-less verif/filelist.f
-less verif/top_tb.sv
-make sim
-less tools/vcs/run/vcs_run.log
-make waves
-
-less constraints/constraints.sdc
-less tools/dc_nxt/scripts/setup.tcl
-less tools/dc_nxt/scripts/synth.tcl
-make synth
-less tools/dc_nxt/run/dc_synth.log
-less tools/dc_nxt/rpt/lab01_top_timing.rpt
-less tools/dc_nxt/outputs/lab01_top_mapped.v
-```
-
-## 15. Como este lab prepara o proximo passo
-
-Depois deste lab, o proximo passo nao deve ser criar um exemplo aleatorio de
-erro. O proximo passo deve ser mexer em uma variavel do ambiente e observar o
-efeito.
-
-Boas experiencias para o Lab 02:
-
-```text
-1. mudar o periodo do clock no SDC;
-2. comparar relatorio de timing com clock relaxado e clock apertado;
-3. observar area, power e timing;
-4. gerar uma simulacao gate-level simples;
-5. so depois introduzir exemplos ruins/corretos de RTL.
-```
-
-Assim voce aprende do jeito que o professor parece estar pedindo: primeiro o
-ambiente, depois constraints, depois experimentos controlados.
+Este lab e pequeno de proposito. Ele prepara sua cabeca para entender melhor
+o que o professor quer quando fala de usar o ambiente, mexer em constraints
+e observar as ferramentas.

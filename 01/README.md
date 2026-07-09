@@ -1,43 +1,45 @@
-# Lab 01 - Esqueleto minimo do ambiente
+# 01 - SystemVerilog RTL: mismatch, latch e FSM
 
-Este primeiro lab nao tenta ensinar muitos erros de RTL de uma vez. O foco e
-entender a estrutura que aparece nos labs Synopsys e no ambiente do professor:
+Este lab transforma o primeiro bloco util do curso em um estudo comparativo.
+
+Ele nao e apenas uma copia do lab da Synopsys. A ideia aqui e:
+
+- manter exemplos ruins e corretos lado a lado;
+- rodar simulacao RTL;
+- rodar sintese;
+- comparar com simulacao gate-level quando a sintese gerar netlist;
+- ler comentarios no codigo e no Tcl;
+- seguir o roteiro cronologico em `docs/guia_lab.md`.
+
+## Exemplos
 
 ```text
-01/
-  rtl/
-  verif/
-  constraints/
-  tools/
-    vcs/
-      scripts/
-      run/
-    dc_nxt/
-      scripts/
-      run/
-      outputs/
-      rpt/
+ERRO 01 - sensitivity list incompleta
+ERRO 02 - latch nao intencional
+ERRO 03 - FSM sem estrutura robusta
 ```
 
-Comece lendo:
+Cada exemplo tem pelo menos duas variantes:
 
-```bash
-less docs/guia_lab.md
+```text
+bad   codigo propositalmente perigoso
+good  codigo corrigido
 ```
 
-Depois rode:
+## Comece por aqui
+
+No servidor:
 
 ```bash
+cd ~/curso/01
 make help
-make show
 make doctor
-make sim
-make waves
-make synth
+make sim EX=01 CASE=bad
+make sim EX=01 CASE=good
 ```
 
-Se a biblioteca SAED nao estiver no caminho padrao, informe o caminho:
+Depois siga:
 
-```bash
-make synth SAED_REF=/caminho/para/ref
+```text
+docs/guia_lab.md
 ```
