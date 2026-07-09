@@ -59,6 +59,13 @@ Thumbs.db
 *.orig
 
 # ==============================================================================
+# Arquivos auxiliares apenas do Windows/local
+# ==============================================================================
+/enviar_curso.bat
+/scripts/
+/README.md
+
+# ==============================================================================
 # Arquivos grandes de material bruto devem ficar fora deste repo de labs.
 # Se precisar versionar um guia pequeno e essencial, remova a regra localmente.
 # ==============================================================================
