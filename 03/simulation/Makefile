@@ -35,6 +35,7 @@ help:
 	@echo "Lab 03 - simulacao RTL do mini_datapath"
 	@echo
 	@echo "Sequencia recomendada:"
+	@echo "  module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6"
 	@echo "  make doctor"
 	@echo "  make show"
 	@echo "  make test"
@@ -49,10 +50,10 @@ doctor:
 	@echo "--- [DOCTOR] Conferindo ambiente de simulacao ---"
 	@command -v vcs >/dev/null 2>&1 && \
 		echo "VCS: encontrado" || \
-		echo "VCS: nao encontrado. Carregue o modulo VCS no servidor."
+		echo "VCS: nao encontrado. Rode: module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6"
 	@command -v verdi >/dev/null 2>&1 && \
 		echo "Verdi: encontrado" || \
-		echo "Verdi: nao encontrado. Necessario apenas para waveform."
+		echo "Verdi: nao encontrado. Rode: module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6"
 	@[ -f "$(FILELIST)" ] && echo "Filelist: $(FILELIST)" || \
 		(echo "ERRO: $(FILELIST) nao encontrado"; exit 1)
 

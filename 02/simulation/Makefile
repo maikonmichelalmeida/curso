@@ -61,6 +61,7 @@ help:
 	@echo "  make all                 Roda todos os testes acima"
 	@echo
 	@echo "Passo a passo:"
+	@echo "  module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6"
 	@echo "  make show TEST=alu"
 	@echo "  make comp TEST=alu"
 	@echo "  make sim TEST=alu"
@@ -90,10 +91,10 @@ doctor: check
 	@echo "--- [DOCTOR] Conferindo ambiente para TEST=$(TEST) ---"
 	@command -v vcs >/dev/null 2>&1 && \
 		echo "VCS: encontrado" || \
-		echo "VCS: nao encontrado. Carregue o modulo VCS antes de compilar."
+		echo "VCS: nao encontrado. Rode: module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6"
 	@command -v verdi >/dev/null 2>&1 && \
 		echo "Verdi: encontrado" || \
-		echo "Verdi: nao encontrado. Carregue o modulo Verdi antes de abrir ondas."
+		echo "Verdi: nao encontrado. Rode: module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6"
 	@echo "Filelist: $(FILELIST)"
 	@echo "Top:      $(TOP)"
 	@echo "Run dir:  $(RUN_DIR)"

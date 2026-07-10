@@ -54,6 +54,7 @@ Estrutura:
 No servidor:
 
 ```bash
+module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6
 cd ~/curso/02/simulation
 make help
 make list

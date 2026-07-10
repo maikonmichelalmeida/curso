@@ -52,6 +52,8 @@ help:
 	@echo "Lab 03 - sintese gradual com constraints"
 	@echo
 	@echo "Sequencia recomendada:"
+	@echo "  module avail dc design compiler synopsys"
+	@echo "  module load <modulo-do-Design-Compiler-ou-DC-NXT>"
 	@echo "  make doctor"
 	@echo "  make show LEVEL=0"
 	@echo "  make syn  LEVEL=0"
@@ -71,10 +73,10 @@ doctor:
 	@echo "--- [DOCTOR] Conferindo ambiente de sintese ---"
 	@command -v dc_shell >/dev/null 2>&1 && \
 		echo "dc_shell: encontrado" || \
-		echo "dc_shell: nao encontrado. Carregue Design Compiler/DC NXT."
+		echo "dc_shell: nao encontrado. Use module avail dc/design/compiler/synopsys e carregue Design Compiler/DC NXT."
 	@[ -d "$(REF_LIB)" ] && \
 		echo "REF_LIB: $(REF_LIB)" || \
-		echo "ATENCAO: REF_LIB nao encontrado: $(REF_LIB)"
+		echo "ATENCAO: REF_LIB nao encontrado: $(REF_LIB). Use find /home/ciexpert -name saed32hvt_ss0p75v125c.db e passe REF_LIB=/caminho/SAED32_2012-12-25."
 	@[ -f "../rtl/mini_datapath.sv" ] && echo "RTL: encontrado" || \
 		(echo "ERRO: RTL nao encontrado"; exit 1)
 	@[ -f "scripts/constraints_level$(LEVEL).tcl" ] && \

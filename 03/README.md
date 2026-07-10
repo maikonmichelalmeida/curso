@@ -46,6 +46,8 @@ entradas externas -> registradores -> ALU -> registrador -> saidas externas
 No servidor, primeiro rode simulacao RTL:
 
 ```bash
+cd ~/curso
+module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6
 cd ~/curso/03/simulation
 make doctor
 make test
@@ -63,6 +65,24 @@ make syn LEVEL=3
 make syn LEVEL=4
 make syn LEVEL=5
 make syn LEVEL=6
+```
+
+Se `make doctor` disser que `dc_shell` nao foi encontrado, ainda falta carregar
+o modulo do Design Compiler/DC NXT no servidor. Para descobrir o nome disponivel:
+
+```bash
+module avail dc
+module avail design
+module avail compiler
+module avail synopsys
+```
+
+Se `make doctor` disser que `REF_LIB` nao foi encontrado, informe o caminho da
+biblioteca SAED32 ao rodar a sintese:
+
+```bash
+find /home/ciexpert -name "saed32hvt_ss0p75v125c.db" 2>/dev/null
+make syn LEVEL=0 REF_LIB=/caminho/para/SAED32_2012-12-25
 ```
 
 Para estudar efeito de largura:
