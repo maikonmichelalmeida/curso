@@ -1,24 +1,25 @@
-# 01 - SystemVerilog lab, primeiro contato
+# 01 - Mux 4:1 do zero
 
-Este primeiro passo usa o lab de SystemVerilog do material Synopsys.
+Este lab e o primeiro degrau real do curso local.
 
-Por enquanto o objetivo e pequeno:
+Objetivo:
 
-1. entender a pasta `rtl`;
-2. entender a pasta `simulation`;
-3. entender o `reg_array.f`;
-4. usar um Makefile simples para compilar e simular com VCS;
-5. abrir a waveform no Verdi.
+1. criar um RTL simples;
+2. criar um testbench simples;
+3. criar um `filelist.f`;
+4. criar um Makefile minimo;
+5. rodar VCS;
+6. abrir waveform no Verdi.
 
-Ainda nao entramos em:
+Ainda nao usamos:
 
+- Tcl;
+- SDC;
+- sintese;
 - Design Compiler;
-- DC_NXT;
-- constraints SDC;
-- Tcl de sintese;
 - ambiente completo do professor.
 
-Comece por:
+No servidor:
 
 ```bash
 cd ~/curso/01/simulation
@@ -28,8 +29,5 @@ make sim
 make waves
 ```
 
-Leia o roteiro em:
-
-```bash
-less ../docs/guia_lab.md
-```
+O guia HTML local fica em `C:\Users\maiko\ci_expert\curso\guia\01.html`.
+Essa pasta esta ignorada pelo Git.

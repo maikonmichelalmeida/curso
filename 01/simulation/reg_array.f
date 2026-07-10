@@ -1,9 +1,0 @@
-reg_if.v
-../rtl/reg_array.sv
-transaction_object.sv
-Driver.sv
-Monitor.sv
-scoreboard.sv
-env.sv
-test.sv
-tb.v

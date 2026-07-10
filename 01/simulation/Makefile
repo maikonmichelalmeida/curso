@@ -1,37 +1,53 @@
 # ==============================================================================
-# Lab 01 - Makefile minimo baseado no lab SystemVerilog da Synopsys
+# Lab 01 - Makefile minimo para VCS e Verdi
 # ==============================================================================
 #
-# Nesta primeira etapa o Makefile so faz tres coisas:
-#   1. compila os arquivos listados em reg_array.f;
-#   2. roda o executavel simv criado pelo VCS;
-#   3. abre a waveform no Verdi.
+# Este Makefile e intencionalmente pequeno.
 #
-# Sem sintese, sem constraints, sem Tcl, sem ambiente completo.
+# A ideia e aprender apenas quatro alvos:
+#
+#   make comp   -> compila usando o filelist.f
+#   make sim    -> executa o simulador gerado, chamado simv
+#   make waves  -> abre o arquivo mux4.fsdb no Verdi
+#   make clean  -> apaga arquivos gerados
+#
+# Nada de Tcl, nada de sintese, nada de constraints.
 
 SHELL := /bin/bash
 
-FILELIST := reg_array.f
+FILELIST := filelist.f
+TOP      := tb_mux4
 SIMV     := simv
-WAVE     := reg_array.fsdb
+WAVE     := mux4.fsdb
 
-VCS_FLAGS := -sverilog -debug_access+all -kdb -l comp.log
+# Flags minimas:
+# -sverilog          habilita SystemVerilog
+# -timescale         define unidade/precisao de tempo
+# -debug_access+all  permite debug e waveform com mais informacao
+# -kdb               gera base de dados util para Verdi
+# -l comp.log        salva log da compilacao
+VCS_FLAGS := -sverilog -timescale=1ns/1ps -debug_access+all -kdb -l comp.log
 
 .PHONY: help comp sim test waves clean
 
 help:
-	@echo "Lab 01 - primeiro Makefile"
+	@echo "Lab 01 - mux 4:1"
 	@echo
 	@echo "Comandos:"
-	@echo "  make comp    Compila com VCS usando reg_array.f"
+	@echo "  make comp    Compila o testbench e o RTL com VCS"
 	@echo "  make sim     Executa ./simv e grava sim.log"
 	@echo "  make test    Limpa, compila e simula"
-	@echo "  make waves   Abre reg_array.fsdb no Verdi"
+	@echo "  make waves   Abre mux4.fsdb no Verdi"
 	@echo "  make clean   Remove arquivos gerados"
+	@echo
+	@echo "Arquivos principais:"
+	@echo "  ../tb/tb_mux4.sv"
+	@echo "  ../rtl/mux4.sv"
+	@echo "  filelist.f"
 
 comp:
 	@echo "--- [COMP] VCS lendo $(FILELIST) ---"
-	vcs $(VCS_FLAGS) -f $(FILELIST)
+	vcs $(VCS_FLAGS) -f $(FILELIST) -top $(TOP)
 
 sim:
 	@echo "--- [SIM] Executando $(SIMV) ---"
@@ -52,5 +68,5 @@ waves:
 	verdi -ssf $(WAVE) &
 
 clean:
-	@echo "--- [CLEAN] Limpando arquivos gerados ---"
-	rm -rf simv* csrc* *.log ucli.key novas.* verdiLog *.fsdb *.vcd *.daidir DVEfiles
+	@echo "--- [CLEAN] Removendo arquivos gerados ---"
+	rm -rf simv* csrc* *.log *.fsdb *.vcd *.vpd *.key ucli.key novas.* verdiLog AN.DB DVEfiles *.daidir
