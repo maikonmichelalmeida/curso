@@ -2,8 +2,15 @@
 # Lab 02 - Makefile simples para testar modulo por modulo
 # ==============================================================================
 #
-# Este Makefile continua bem perto do Lab 01.
-# A unica novidade e a variavel TEST.
+# Este Makefile ainda e pequeno, mas da um passo em direcao aos labs:
+#
+#   1. cada teste escolhe um filelist;
+#   2. cada teste escolhe um top de testbench;
+#   3. cada teste gera seus arquivos dentro de run/<teste>/.
+#
+# Isso evita misturar os resultados de mux, alu, regbank, memory e top.
+# Mais adiante, o ambiente do professor vai separar ainda mais as ferramentas.
+# Por enquanto, so estamos aprendendo a organizar simulacoes RTL.
 #
 # Exemplos:
 #
@@ -23,7 +30,10 @@ TEST ?= mux
 TESTS := mux alu regbank memory top
 
 FILELIST = filelist_$(TEST).f
-WAVE     = $(TEST).fsdb
+RUN_ROOT = run
+RUN_DIR  = $(RUN_ROOT)/$(TEST)
+SIMV     = $(RUN_DIR)/simv
+WAVE     = $(RUN_DIR)/$(TEST).fsdb
 
 TOP_mux     = tb_mux
 TOP_alu     = tb_alu
@@ -33,9 +43,11 @@ TOP_top     = tb_top
 
 TOP = $(TOP_$(TEST))
 
-VCS_FLAGS = -sverilog -timescale=1ns/1ps -debug_access+all -kdb -l comp.log
+VCS_FLAGS = -sverilog -timescale=1ns/1ps -debug_access+all -kdb
+VCS_FLAGS += -Mdir=$(RUN_DIR)/csrc
+VCS_FLAGS += -l $(RUN_DIR)/comp.log
 
-.PHONY: help list check comp sim waves test all clean
+.PHONY: help list check doctor show setup comp sim waves test all clean clean-all
 
 help:
 	@echo "Lab 02 - testes RTL simples"
@@ -49,13 +61,16 @@ help:
 	@echo "  make all                 Roda todos os testes acima"
 	@echo
 	@echo "Passo a passo:"
+	@echo "  make show TEST=alu"
 	@echo "  make comp TEST=alu"
 	@echo "  make sim TEST=alu"
 	@echo "  make waves TEST=alu"
 	@echo
 	@echo "Apoio:"
 	@echo "  make list"
-	@echo "  make clean"
+	@echo "  make doctor TEST=alu"
+	@echo "  make clean TEST=alu"
+	@echo "  make clean-all"
 
 list:
 	@echo "Testes disponiveis: $(TESTS)"
@@ -71,17 +86,41 @@ check:
 		exit 1; \
 	fi
 
-comp: check
+doctor: check
+	@echo "--- [DOCTOR] Conferindo ambiente para TEST=$(TEST) ---"
+	@command -v vcs >/dev/null 2>&1 && \
+		echo "VCS: encontrado" || \
+		echo "VCS: nao encontrado. Carregue o modulo VCS antes de compilar."
+	@command -v verdi >/dev/null 2>&1 && \
+		echo "Verdi: encontrado" || \
+		echo "Verdi: nao encontrado. Carregue o modulo Verdi antes de abrir ondas."
+	@echo "Filelist: $(FILELIST)"
+	@echo "Top:      $(TOP)"
+	@echo "Run dir:  $(RUN_DIR)"
+
+show: check
+	@echo "TEST:     $(TEST)"
+	@echo "TOP:      $(TOP)"
+	@echo "FILELIST: $(FILELIST)"
+	@echo "RUN_DIR:  $(RUN_DIR)"
+	@echo "SIMV:     $(SIMV)"
+	@echo "WAVE:     $(WAVE)"
+
+setup: check
+	@mkdir -p $(RUN_DIR)
+
+comp: setup
 	@echo "--- [COMP] TEST=$(TEST) TOP=$(TOP) FILELIST=$(FILELIST) ---"
-	vcs $(VCS_FLAGS) -f $(FILELIST) -top $(TOP)
+	@echo "Saida da compilacao: $(RUN_DIR)/comp.log"
+	vcs $(VCS_FLAGS) -f $(FILELIST) -top $(TOP) -o $(SIMV)
 
 sim: check
 	@echo "--- [SIM] TEST=$(TEST) ---"
-	@if [ ! -x "simv" ]; then \
-		echo "ERRO: simv nao existe. Rode make comp TEST=$(TEST) antes."; \
+	@if [ ! -x "$(SIMV)" ]; then \
+		echo "ERRO: $(SIMV) nao existe. Rode make comp TEST=$(TEST) antes."; \
 		exit 1; \
 	fi
-	./simv -l sim.log
+	cd $(RUN_DIR) && ./simv -l sim.log
 
 waves: check
 	@echo "--- [WAVES] TEST=$(TEST) WAVE=$(WAVE) ---"
@@ -89,7 +128,7 @@ waves: check
 		echo "ERRO: waveform nao encontrada: $(WAVE). Rode make sim TEST=$(TEST) antes."; \
 		exit 1; \
 	fi
-	verdi -dbdir simv.daidir -ssf $(WAVE) &
+	cd $(RUN_DIR) && verdi -dbdir simv.daidir -ssf $(TEST).fsdb &
 
 test:
 	@$(MAKE) --no-print-directory clean TEST=$(TEST)
@@ -107,5 +146,9 @@ all:
 	done
 
 clean:
-	@echo "--- [CLEAN] Limpando arquivos gerados ---"
-	rm -rf simv* csrc* *.log *.fsdb *.vcd *.vpd *.key ucli.key novas.* verdiLog AN.DB DVEfiles *.daidir
+	@echo "--- [CLEAN] Limpando run de TEST=$(TEST) ---"
+	rm -rf $(RUN_DIR)
+
+clean-all:
+	@echo "--- [CLEAN-ALL] Limpando todos os runs ---"
+	rm -rf $(RUN_ROOT)
