@@ -124,6 +124,20 @@ p {
   border-left-color: var(--warn);
 }
 
+.quick-path {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfe;
+  margin: 22px 0;
+  padding: 18px;
+}
+
+.quick-path h2 {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
 code {
   background: #edf1f7;
   padding: 0.12rem 0.32rem;

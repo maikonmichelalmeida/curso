@@ -150,6 +150,13 @@ Como isso conversa com o material das aulas:
   slides 34-35: create_lib/open_lib, check_library, TLUPlus e map file.
   slides 44-45: separacao entre common_setup.tcl e dc_setup.tcl.
 
+04_Constraints_Reg_to_Reg_and_IO_Timing_parte_A/B.md
+  create_clock, set_clock_uncertainty, set_clock_latency,
+  set_clock_transition, set_input_delay, set_output_delay e check_timing.
+
+05_Constraints_Input_Transition_and_Output_Loading.md
+  set_driving_cell, set_max_capacitance, set_load e load_of.
+
 12_Design_Compiler_NXT_RTL_Synthesis_2021_06_Lab_Guide.md
   Lab 1: ADDITIONAL_SEARCH_PATH, TARGET_LIBRARY_FILES,
          NDM_DESIGN_LIB, NDM_REFERENCE_LIBS, TECH_FILE,
@@ -168,8 +175,13 @@ Variaveis principais no nosso Makefile:
 REF_ROOT=/caminho/para/ref
 TARGET_DB=saed32lvt_ss0p75v125c.db
 DRIVE_LIB=saed32lvt_ss0p75v125c
-DRIVE_CELL=INVX0_LVT
+DRIVE_CELL=NBUFFX2_LVT
+LOAD_CELL=NBUFFX16_LVT
 ```
+
+Esses nomes acompanham o Lab Guide de DC NXT: uma celula buffer pequena modela
+quem dirige as entradas, e uma celula buffer maior serve como referencia de
+carga para `load_of`.
 
 O material antigo `04 ces_svrtl_2019.03` usa outro layout:
 

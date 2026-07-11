@@ -34,6 +34,20 @@
         externos, sequenciais e combinacionais suficientes para estudar timing.
       </div>
 
+      <section class="quick-path">
+        <h2>Trilha minima</h2>
+        <p>
+          Se voce quiser seguir sem abrir todas as explicacoes longas, faca isto:
+        </p>
+        <ol>
+          <li>Rode a simulacao em <code>03/simulation</code> e confirme <code>TEST_RESULT: PASS</code>.</li>
+          <li>Entre em <code>03/synthesis</code> e rode <code>module load designcompiler/W-2024.09-SP5-4</code>.</li>
+          <li>Rode <code>make doctor</code>. Se faltar biblioteca, rode <code>make find-lib</code>.</li>
+          <li>Rode <code>make syn LEVEL=0</code> ate <code>LEVEL=6</code>, um por vez.</li>
+          <li>Compare os reports em <code>03/synthesis/reports</code>.</li>
+        </ol>
+      </section>
+
       <div class="toolbar">
         <button type="button" data-action="expand">Abrir explicacoes</button>
         <button type="button" data-action="collapse">Fechar explicacoes</button>
@@ -320,13 +334,21 @@ set_app_var link_library   "* $target_library"</code></pre>
         <pre><code>REF_ROOT=/caminho/para/ref
 TARGET_DB=saed32lvt_ss0p75v125c.db
 DRIVE_LIB=saed32lvt_ss0p75v125c
-DRIVE_CELL=INVX0_LVT</code></pre>
+DRIVE_CELL=NBUFFX2_LVT
+LOAD_CELL=NBUFFX16_LVT</code></pre>
         <p>
           <code>REF_ROOT</code> e a pasta que contem <code>DBs</code>,
           <code>CLIBs</code> e <code>tech</code>. O arquivo
           <code>common_setup.tcl</code> transforma essas variaveis em
           <code>search_path</code>, <code>target_library</code> e
           <code>link_library</code>.
+        </p>
+        <p>
+          O <code>NBUFFX2_LVT</code> vem do Lab Guide como exemplo de celula que
+          dirige entradas com <code>set_driving_cell</code>. O
+          <code>NBUFFX16_LVT</code> e usado como referencia de carga para
+          <code>load_of</code>. A ideia nao e decorar esses nomes; e entender
+          que o DC precisa de um modelo eletrico para o mundo fora do bloco.
         </p>
       </details>
 

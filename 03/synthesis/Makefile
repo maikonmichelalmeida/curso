@@ -56,7 +56,8 @@ REF_LIB  ?=
 
 TARGET_DB  ?= saed32lvt_ss0p75v125c.db
 DRIVE_LIB  ?= saed32lvt_ss0p75v125c
-DRIVE_CELL ?= INVX0_LVT
+DRIVE_CELL ?= NBUFFX2_LVT
+LOAD_CELL  ?= NBUFFX16_LVT
 
 RUN_DIR = run/level$(LEVEL)
 
@@ -84,7 +85,8 @@ help:
 	@echo "  REF_ROOT=/caminho/para/ref"
 	@echo "  TARGET_DB=saed32lvt_ss0p75v125c.db"
 	@echo "  DRIVE_LIB=saed32lvt_ss0p75v125c"
-	@echo "  DRIVE_CELL=INVX0_LVT"
+	@echo "  DRIVE_CELL=NBUFFX2_LVT"
+	@echo "  LOAD_CELL=NBUFFX16_LVT"
 	@echo
 	@echo "Apoio:"
 	@echo "  make find-lib    Procura bibliotecas SAED32 em locais provaveis"
@@ -121,6 +123,7 @@ show:
 	@echo "TARGET_DB:  $(TARGET_DB)"
 	@echo "DRIVE_LIB:  $(DRIVE_LIB)"
 	@echo "DRIVE_CELL: $(DRIVE_CELL)"
+	@echo "LOAD_CELL:  $(LOAD_CELL)"
 	@echo "SCRIPT:     scripts/run_dc.tcl"
 	@echo "CONSTRAINT: scripts/constraints_level$(LEVEL).tcl"
 
@@ -161,7 +164,7 @@ setup:
 syn: setup
 	@echo "--- [SYN] Rodando Design Compiler para LEVEL=$(LEVEL) ---"
 	@echo "Log principal: $(RUN_DIR)/dc_level$(LEVEL).log"
-	dc_shell -x "set LAB_LEVEL $(LEVEL); set DESIGN_TOP $(TOP); set DESIGN_WIDTH $(WIDTH); set REF_ROOT_PATH {$(REF_ROOT)}; set REF_LIB_PATH {$(REF_LIB)}; set TARGET_DB_NAME {$(TARGET_DB)}; set DRIVE_LIB_NAME {$(DRIVE_LIB)}; set DRIVE_CELL_NAME {$(DRIVE_CELL)}; source -e -v scripts/run_dc.tcl" | tee $(RUN_DIR)/dc_level$(LEVEL).log
+	dc_shell -x "set LAB_LEVEL $(LEVEL); set DESIGN_TOP $(TOP); set DESIGN_WIDTH $(WIDTH); set REF_ROOT_PATH {$(REF_ROOT)}; set REF_LIB_PATH {$(REF_LIB)}; set TARGET_DB_NAME {$(TARGET_DB)}; set DRIVE_LIB_NAME {$(DRIVE_LIB)}; set DRIVE_CELL_NAME {$(DRIVE_CELL)}; set LOAD_CELL_NAME {$(LOAD_CELL)}; source -e -v scripts/run_dc.tcl" | tee $(RUN_DIR)/dc_level$(LEVEL).log
 
 gui:
 	@echo "--- [GUI] Abrindo Design Vision para o DDC mapeado do nivel $(LEVEL) ---"

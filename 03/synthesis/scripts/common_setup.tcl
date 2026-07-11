@@ -49,11 +49,16 @@ if {![info exists DRIVE_LIB_NAME]} {
 }
 
 if {![info exists DRIVE_CELL_NAME]} {
-  set DRIVE_CELL_NAME "INVX0_LVT"
+  set DRIVE_CELL_NAME "NBUFFX2_LVT"
+}
+
+if {![info exists LOAD_CELL_NAME]} {
+  set LOAD_CELL_NAME "NBUFFX16_LVT"
 }
 
 set LAB03_DRIVE_LIB_NAME  $DRIVE_LIB_NAME
 set LAB03_DRIVE_CELL_NAME $DRIVE_CELL_NAME
+set LAB03_LOAD_CELL_NAME  $LOAD_CELL_NAME
 
 set LAB03_DB_PATH     ""
 set LAB03_CLIB_PATH   ""
@@ -71,7 +76,8 @@ if {[file isdirectory "$REF_ROOT_PATH/DBs"]} {
   set LAB03_TECH_PATH "$REF_LIB_PATH/tech"
   set LAB03_TARGET_FILE "saed32hvt_ss0p75v125c.db"
   set LAB03_DRIVE_LIB_NAME  "saed32hvt_ss0p75v125c"
-  set LAB03_DRIVE_CELL_NAME "INVX0_HVT"
+  set LAB03_DRIVE_CELL_NAME "NBUFFX2_HVT"
+  set LAB03_LOAD_CELL_NAME  "NBUFFX16_HVT"
   puts "INFO Lab03: usando layout legado SAED32_2012-12-25."
 } else {
   puts "AVISO Lab03: nao encontrei a pasta de bibliotecas SAED32."
@@ -123,3 +129,4 @@ puts "INFO Lab03: DB path=$LAB03_DB_PATH"
 puts "INFO Lab03: target_library=$target_library"
 puts "INFO Lab03: synthetic_library=$synthetic_library"
 puts "INFO Lab03: driving lib/cell=$LAB03_DRIVE_LIB_NAME/$LAB03_DRIVE_CELL_NAME"
+puts "INFO Lab03: load reference=$LAB03_DRIVE_LIB_NAME/$LAB03_LOAD_CELL_NAME/A"
