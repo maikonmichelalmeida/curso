@@ -179,7 +179,7 @@ doctor:
 		status=1; \
 	fi; \
 	if [ -f "$(TARGET_DB_PATH)" ]; then \
-		[ -f "$(LVT_NDM_PATH)" ] && echo "OK: NDM encontrado: $(LVT_NDM_PATH)" || echo "AVISO: NDM nao encontrado: $(LVT_NDM_PATH)"; \
+		[ -e "$(LVT_NDM_PATH)" ] && echo "OK: NDM encontrado: $(LVT_NDM_PATH)" || echo "AVISO: NDM nao encontrado: $(LVT_NDM_PATH)"; \
 		[ -f "$(TECH_FILE_PATH)" ] && echo "OK: technology file encontrado: $(TECH_FILE_PATH)" || echo "AVISO: technology file nao encontrado: $(TECH_FILE_PATH)"; \
 		[ -f "$(TLUPLUS_MAX_PATH)" ] && echo "OK: TLUPlus encontrado: $(TLUPLUS_MAX_PATH)" || echo "AVISO: TLUPlus nao encontrado: $(TLUPLUS_MAX_PATH)"; \
 		[ -f "$(MAP_FILE_PATH)" ] && echo "OK: map file encontrado: $(MAP_FILE_PATH)" || echo "AVISO: map file nao encontrado: $(MAP_FILE_PATH)"; \
