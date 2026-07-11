@@ -38,8 +38,16 @@ set_clock_latency     -max   $CLK_INT_LATENCY    [get_clocks clk]
 set_clock_latency     -source -max $CLK_SOURCE_LATENCY [get_clocks clk]
 set_clock_transition  -max   $CLK_TRANSITION     [get_clocks clk]
 
-set LIB_NAME saed32hvt_ss0p75v125c
-set CELL     INVX0_HVT
+if {![info exists LAB03_DRIVE_LIB_NAME]} {
+  set LAB03_DRIVE_LIB_NAME saed32lvt_ss0p75v125c
+}
+
+if {![info exists LAB03_DRIVE_CELL_NAME]} {
+  set LAB03_DRIVE_CELL_NAME INVX0_LVT
+}
+
+set LIB_NAME $LAB03_DRIVE_LIB_NAME
+set CELL     $LAB03_DRIVE_CELL_NAME
 set LOAD_CELL           "$LIB_NAME/$CELL"
 set LOAD_CELL_INPUT_PIN "$LOAD_CELL/A"
 

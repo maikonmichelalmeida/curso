@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab 01 - Mux 4:1 do zero</title>
+  <link rel="stylesheet" href="css/estudo.css">
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <div class="brand">Curso RTL - Lab 01</div>
+      <nav>
+        <a href="00.html">Início</a>
+        <a href="01.html">Lab 01</a>
+        <a href="02.html">Lab 02</a>
+        <a href="03.html">Lab 03</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <article>
+      <h1>Mux 4:1 do zero</h1>
+      <p class="lead">
+        Este guia começa do ponto mínimo: um RTL simples, um testbench simples,
+        um filelist e um Makefile pequeno para lembrar como rodar VCS e Verdi no servidor.
+      </p>
+
+      <div class="callout warn">
+        Ainda não estamos fazendo Tcl, SDC, Design Compiler, DC_NXT ou Formality.
+        Esses assuntos entram depois, quando este fluxo básico estiver confortável.
+      </div>
+
+      <h2>1. Estrutura criada</h2>
+      <pre><code>curso/01/
+  README.md
+  rtl/
+    mux4.sv
+  tb/
+    tb_mux4.sv
+  simulation/
+    filelist.f
+    Makefile</code></pre>
+
+      <p>
+        A separação é simples: <code>rtl</code> guarda o circuito, <code>tb</code>
+        guarda o teste, e <code>simulation</code> guarda os comandos de simulação.
+      </p>
+
+      <h2>2. O circuito</h2>
+      <p>
+        O arquivo <code>rtl/mux4.sv</code> implementa um mux 4:1.
+        O sinal <code>sel</code> escolhe qual entrada aparece na saída <code>y</code>.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>sel</th>
+            <th>saída y</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>2'b00</code></td><td><code>d0</code></td></tr>
+          <tr><td><code>2'b01</code></td><td><code>d1</code></td></tr>
+          <tr><td><code>2'b10</code></td><td><code>d2</code></td></tr>
+          <tr><td><code>2'b11</code></td><td><code>d3</code></td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        Repare no uso de <code>always_comb</code>. Ele diz claramente que o bloco
+        é combinacional. Mais tarde vamos comparar isso com estilos que podem gerar
+        latch ou mismatch, mas agora só queremos o caminho correto.
+      </p>
+
+      <h2>3. O testbench</h2>
+      <p>
+        O arquivo <code>tb/tb_mux4.sv</code> instancia o mux, aplica quatro valores
+        em <code>sel</code> e verifica se <code>y</code> corresponde à entrada esperada.
+      </p>
+
+      <pre><code>verifica_mux(2'b00, d0);
+verifica_mux(2'b01, d1);
+verifica_mux(2'b10, d2);
+verifica_mux(2'b11, d3);</code></pre>
+
+      <p>
+        Se tudo passar, o log deve mostrar <code>TEST_RESULT: PASS</code>.
+      </p>
+
+      <h2>4. O filelist</h2>
+      <p>
+        O arquivo <code>simulation/filelist.f</code> é a lista que o VCS lê.
+        Por pedido nosso, o testbench aparece primeiro:
+      </p>
+
+      <pre><code>../tb/tb_mux4.sv
+../rtl/mux4.sv</code></pre>
+
+      <p>
+        Isso ajuda a visualizar que o top da simulação é o testbench. Ele instancia
+        o DUT e conduz o teste.
+      </p>
+
+      <h2>5. O Makefile mínimo</h2>
+      <p>
+        O arquivo <code>simulation/Makefile</code> guarda comandos que você rodaria
+        manualmente. Por enquanto, Makefile é só isso: nomes curtos para comandos.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Comando</th>
+            <th>O que faz</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>make comp</code></td><td>chama o VCS e compila os arquivos do filelist</td></tr>
+          <tr><td><code>make sim</code></td><td>executa o simulador <code>simv</code></td></tr>
+          <tr><td><code>make test</code></td><td>limpa, compila e simula</td></tr>
+          <tr><td><code>make waves</code></td><td>abre <code>mux4.fsdb</code> no Verdi</td></tr>
+          <tr><td><code>make clean</code></td><td>remove arquivos gerados</td></tr>
+        </tbody>
+      </table>
+
+      <h2>6. Ordem para rodar no servidor</h2>
+      <pre><code>cd ~/curso
+git pull --ff-only origin main
+cd 01/simulation
+make help
+make comp
+make sim
+make waves</code></pre>
+
+      <p>
+        Se as ferramentas ainda não estiverem carregadas, carregue antes de compilar:
+      </p>
+
+      <pre><code>module load vcs/W-2024.09-SP2-3 verdi/W-2024.09-SP2-6</code></pre>
+
+      <h2>7. O que observar</h2>
+      <ol>
+        <li>Depois de <code>make comp</code>, leia <code>comp.log</code>.</li>
+        <li>Depois de <code>make sim</code>, leia <code>sim.log</code>.</li>
+        <li>No <code>sim.log</code>, procure <code>TEST_RESULT: PASS</code>.</li>
+        <li>No Verdi, observe <code>d0</code>, <code>d1</code>, <code>d2</code>, <code>d3</code>, <code>sel</code> e <code>y</code>.</li>
+      </ol>
+
+      <div class="callout check">
+        Se você conseguir explicar o papel de <code>mux4.sv</code>,
+        <code>tb_mux4.sv</code>, <code>filelist.f</code> e <code>Makefile</code>,
+        este primeiro laboratório cumpriu o objetivo.
+      </div>
+
+      <h2>8. Próximo degrau</h2>
+      <p>
+        O próximo passo deve continuar pequeno: talvez alterar o mux para uma versão
+        com erro proposital, ou adicionar um comando <code>make test</code> mais
+        organizado. Só depois disso começamos a aproximar da estrutura do professor.
+      </p>
+    </article>
+  </main>
+
+  <footer class="wrap">
+    Guia local. Não versionado no GitHub.
+  </footer>
+</body>
+</html>
