@@ -67,11 +67,14 @@ LOAD_CELL  ?= NBUFFX16_LVT
 REF_ROOT ?= ../ref
 REF_LIB  ?=
 
-# O caminho abaixo foi encontrado pelo make find-lib no servidor. Ele fica aqui
-# apenas como ajuda para o alvo link-ref, que voce roda explicitamente quando
-# quiser criar o link simbolico ../ref. Nao e usado automaticamente por doctor
-# nem por syn.
-SAED32_SOURCE_REF ?= $(HOME)/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
+# Fonte da pasta ref fornecida/preparada para o laboratorio.
+#
+# Nao ha valor padrao propositalmente: a aula ensina a estrutura esperada
+# (DBs/CLIBs/tech), mas nao define de onde voce recebeu esses arquivos.
+# Depois que make find-lib localizar uma pasta valida, passe-a explicitamente:
+#
+#   make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref
+SAED32_SOURCE_REF ?=
 
 # Physical setup:
 #
@@ -119,8 +122,7 @@ help:
 	@echo "Biblioteca SAED32:"
 	@echo "  O lab espera REF_ROOT=$(REF_ROOT), normalmente ../ref."
 	@echo "  O alvo link-ref cria um link simbolico ../ref para a pasta fornecida."
-	@echo "  Fonte conhecida neste servidor:"
-	@echo "    $(SAED32_SOURCE_REF)"
+	@echo "  Use: make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"
 	@echo "  Para testar outro local sem link: REF_ROOT=/caminho/para/ref."
 	@echo
 	@echo "Niveis disponiveis:"
@@ -267,6 +269,11 @@ find-lib:
 
 link-ref:
 	@echo "--- [LINK-REF] Preparando ../ref ---"; \
+	if [ -z "$(SAED32_SOURCE_REF)" ]; then \
+		echo "ERRO: informe SAED32_SOURCE_REF."; \
+		echo "Use: make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		exit 1; \
+	fi; \
 	if [ ! -d "$(SAED32_SOURCE_REF)" ]; then \
 		echo "ERRO: SAED32_SOURCE_REF nao existe: $(SAED32_SOURCE_REF)"; \
 		echo "Use: make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \

@@ -96,24 +96,19 @@ make doctor
 make syn LEVEL=0
 ```
 
-No servidor atual, o `make find-lib` encontrou uma pasta `ref` valida em:
-
-```text
-/home/ciexpert/maikon.almeida/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
-```
-
 O Makefile nao usa esse caminho automaticamente. O procedimento didatico correto
 e preparar a arvore `ref` do Lab 03, como a aula de setup fisico recomenda.
-Como nao queremos duplicar arquivos grandes, usamos um link simbolico:
+Como nao queremos duplicar arquivos grandes, podemos usar um link simbolico para
+a pasta `ref` que foi fornecida/preparada para o laboratorio:
 
 ```bash
-make link-ref SAED32_SOURCE_REF=/home/ciexpert/maikon.almeida/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
+make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref
 ```
 
 Isso cria:
 
 ```text
-~/curso/03/ref -> /home/ciexpert/.../module_CPU_pdk_SAED/ref
+~/curso/03/ref -> /caminho/terminado/em/ref
 ```
 
 Depois disso, `make doctor` e `make syn LEVEL=0` usam simplesmente `../ref`.
