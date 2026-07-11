@@ -23,7 +23,14 @@
 # A pasta ref nao e criada pelo Design Compiler. Ela precisa existir antes da
 # sintese, porque vem do pacote/ambiente de bibliotecas da tecnologia.
 #
-# Para este lab, o caminho limpo e criar um link simbolico:
+# Pelo metodo da aula de Design Compiler NXT, o caminho esperado e:
+#
+#   curso/03/ref/DBs
+#   curso/03/ref/CLIBs
+#   curso/03/ref/tech
+#
+# Essa pasta ref deve vir do pacote oficial do laboratorio DC NXT usado na aula.
+# Voce pode copia-la para curso/03/ref ou criar um link simbolico para ela:
 #
 #   curso/03/ref -> /caminho/para/pasta/ref/fornecida
 #
@@ -37,7 +44,8 @@
 #   make doctor REF_ROOT=/caminho/para/ref
 #   make syn LEVEL=0 REF_ROOT=/caminho/para/ref
 #
-# REF_LIB permanece disponivel somente para compatibilidade com o lab antigo:
+# REF_LIB permanece disponivel somente para compatibilidade com layouts antigos
+# de biblioteca, mas nao e o roteiro principal deste lab:
 #
 #   make syn LEVEL=0 REF_LIB=/caminho/SAED32_2012-12-25
 
@@ -71,9 +79,10 @@ REF_LIB  ?=
 #
 # Nao ha valor padrao propositalmente: a aula ensina a estrutura esperada
 # (DBs/CLIBs/tech), mas nao define de onde voce recebeu esses arquivos.
-# Depois que make find-lib localizar uma pasta valida, passe-a explicitamente:
+# Se voce quiser evitar copia de arquivos grandes, passe explicitamente a pasta
+# ref do pacote da aula:
 #
-#   make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref
+#   make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref
 SAED32_SOURCE_REF ?=
 
 # Physical setup:
@@ -86,8 +95,9 @@ SAED32_SOURCE_REF ?=
 # Use ENABLE_PHYSICAL_SETUP=1 somente quando quiser estudar essa etapa.
 ENABLE_PHYSICAL_SETUP ?= 0
 
-# Busca controlada. Nao varre todo o /tools indefinidamente.
-SEARCH_ROOTS  ?= $(HOME) /home/ciexpert /tools/pdk/synopsys /tools/synopsys
+# Busca controlada. Este alvo e diagnostico/plano B, nao o roteiro normal.
+# O roteiro normal e preparar ../ref a partir do pacote da aula.
+SEARCH_ROOTS  ?= /tools/pdk/synopsys /tools/synopsys
 FIND_TIMEOUT  ?= 30
 FIND_MAXDEPTH ?= 10
 
@@ -114,15 +124,17 @@ help:
 	@echo
 	@echo "Preparacao recomendada:"
 	@echo "  1. module load designcompiler/W-2024.09-SP5-4"
-	@echo "  2. make find-lib"
-	@echo "  3. make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"
-	@echo "  4. make doctor"
-	@echo "  5. make syn LEVEL=0"
+	@echo "  2. prepare ../ref usando a pasta ref do pacote DC NXT da aula"
+	@echo "     Exemplo com link:"
+	@echo "       make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref"
+	@echo "  3. make doctor"
+	@echo "  4. make syn LEVEL=0"
 	@echo
 	@echo "Biblioteca SAED32:"
 	@echo "  O lab espera REF_ROOT=$(REF_ROOT), normalmente ../ref."
-	@echo "  O alvo link-ref cria um link simbolico ../ref para a pasta fornecida."
-	@echo "  Use: make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"
+	@echo "  ../ref deve ter DBs/, CLIBs/ e tech/, como no Lab Guide DC NXT."
+	@echo "  O alvo link-ref cria um link simbolico ../ref para a pasta ref do pacote da aula."
+	@echo "  Use: make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref"
 	@echo "  Para testar outro local sem link: REF_ROOT=/caminho/para/ref."
 	@echo
 	@echo "Niveis disponiveis:"
@@ -147,7 +159,7 @@ help:
 	@echo "Diagnostico:"
 	@echo "  make doctor"
 	@echo "  make show LEVEL=0"
-	@echo "  make find-lib"
+	@echo "  make find-lib   (plano B; nao substitui o pacote ref da aula)"
 	@echo "  make link-ref"
 
 # Verifica tudo o que e obrigatorio antes da sintese.
@@ -172,9 +184,10 @@ doctor:
 		echo "ERRO: biblioteca SAED32 nao encontrada."; \
 		echo "  Caminho esperado: $(TARGET_DB_PATH)"; \
 		echo "  Procedimento recomendado:"; \
-		echo "    1. make find-lib"; \
-		echo "    2. make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		echo "    1. localize a pasta ref do pacote DC NXT da aula"; \
+		echo "    2. make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref"; \
 		echo "    3. make doctor"; \
+		echo "  Plano B diagnostico, se voce nao sabe onde o pacote foi instalado: make find-lib"; \
 		echo "  Alternativa sem link: make doctor REF_ROOT=/caminho/para/ref"; \
 		status=1; \
 	fi; \
@@ -226,8 +239,11 @@ show:
 
 # Procura a SAED32 somente em locais provaveis, com profundidade e tempo limitados.
 # Cada raiz recebe no maximo FIND_TIMEOUT segundos.
+# Use isto como plano B diagnostico. O roteiro principal continua sendo usar a
+# pasta ref do pacote DC NXT da aula.
 find-lib:
-	@echo "--- [FIND-LIB] Procurando bibliotecas SAED32 com limites ---"
+	@echo "--- [FIND-LIB] Diagnostico: procurando bibliotecas SAED32 com limites ---"
+	@echo "Este alvo e plano B. Pelo roteiro da aula, prepare ../ref a partir do pacote DC NXT."
 	@echo "Raizes: $(SEARCH_ROOTS)"
 	@echo "Limite: $(FIND_TIMEOUT)s por raiz; profundidade maxima: $(FIND_MAXDEPTH)"
 	@echo
@@ -260,8 +276,8 @@ find-lib:
 		echo "Voce precisara obter a pasta ref do pacote original do laboratorio."; \
 	else \
 		echo; \
-		echo "Se apareceu .../ref/DBs/$(TARGET_DB), use:"; \
-		echo "  make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		echo "Se apareceu uma pasta do pacote da aula contendo .../ref/DBs/$(TARGET_DB), use:"; \
+		echo "  make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref"; \
 		echo "  make doctor"; \
 		echo "  make syn LEVEL=0"; \
 	fi; \
@@ -271,12 +287,14 @@ link-ref:
 	@echo "--- [LINK-REF] Preparando ../ref ---"; \
 	if [ -z "$(SAED32_SOURCE_REF)" ]; then \
 		echo "ERRO: informe SAED32_SOURCE_REF."; \
-		echo "Use: make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		echo "Use a pasta ref do pacote DC NXT da aula:"; \
+		echo "  make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref"; \
 		exit 1; \
 	fi; \
 	if [ ! -d "$(SAED32_SOURCE_REF)" ]; then \
 		echo "ERRO: SAED32_SOURCE_REF nao existe: $(SAED32_SOURCE_REF)"; \
-		echo "Use: make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		echo "Use a pasta ref do pacote DC NXT da aula:"; \
+		echo "  make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref"; \
 		exit 1; \
 	fi; \
 	if [ ! -f "$(SAED32_SOURCE_REF)/DBs/$(TARGET_DB)" ]; then \

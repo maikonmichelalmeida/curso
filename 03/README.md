@@ -84,41 +84,44 @@ No seu servidor, o modulo encontrado foi:
 module load designcompiler/W-2024.09-SP5-4
 ```
 
-Se `make doctor` disser que a biblioteca SAED32 nao foi encontrada, informe o
-caminho da biblioteca ao rodar a sintese. O formato preferido agora e
-`REF_ROOT`, isto e, o caminho para a pasta `ref` que contem `DBs`, `CLIBs` e
-`tech`:
+Se `make doctor` disser que a biblioteca SAED32 nao foi encontrada, prepare a
+pasta `../ref` exatamente no formato usado pelo Lab Guide de DC NXT. Essa pasta
+deve vir do pacote de referencia da aula e conter `DBs`, `CLIBs` e `tech`:
 
-```bash
-make find-lib
-make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref
-make doctor
-make syn LEVEL=0
+```text
+03/ref/
+  DBs/saed32lvt_ss0p75v125c.db
+  CLIBs/saed32_lvt.ndm
+  tech/saed32nm_1p9m.tf
+  tech/saed32nm_1p9m_Cmax.tluplus
+  tech/saed32nm_tf_itf_tluplus.map
 ```
 
-O Makefile nao usa esse caminho automaticamente. O procedimento didatico correto
-e preparar a arvore `ref` do Lab 03, como a aula de setup fisico recomenda.
-Como nao queremos duplicar arquivos grandes, podemos usar um link simbolico para
-a pasta `ref` que foi fornecida/preparada para o laboratorio:
+O procedimento didatico correto e preparar a arvore `ref` do Lab 03, como a
+aula de setup fisico recomenda. Se voce tiver a pasta `ref` do pacote DC NXT em
+outro local, pode evitar copia de arquivos grandes criando um link simbolico:
 
 ```bash
-make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref
+make link-ref SAED32_SOURCE_REF=/caminho/do/pacote/07_DCNXT_2021.06/ref
 ```
 
 Isso cria:
 
 ```text
-~/curso/03/ref -> /caminho/terminado/em/ref
+~/curso/03/ref -> /caminho/do/pacote/07_DCNXT_2021.06/ref
 ```
 
 Depois disso, `make doctor` e `make syn LEVEL=0` usam simplesmente `../ref`.
 
-Se `make find-lib` nao existir no servidor, o servidor ainda esta com uma versao
-antiga deste lab. Rode:
+Nao use como roteiro um caminho achado por acaso dentro de outro projeto do
+servidor. Isso pode ate funcionar tecnicamente, mas esconde o aprendizado que a
+aula quer construir: `common_setup.tcl` aponta para uma arvore `ref` conhecida,
+e `dc_setup.tcl` usa essa arvore para configurar bibliotecas logicas e fisicas.
+
+Use `make find-lib` somente como plano B de diagnostico, se voce nao souber onde
+o pacote da aula foi instalado. Ele nao substitui o metodo da aula:
 
 ```bash
-cd ~/curso
-git pull --ff-only origin main
 cd ~/curso/03/synthesis
 make find-lib
 ```
