@@ -91,7 +91,9 @@ caminho da biblioteca ao rodar a sintese. O formato preferido agora e
 
 ```bash
 make find-lib
-make syn LEVEL=0 REF_ROOT=/caminho/para/ref
+make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref
+make doctor
+make syn LEVEL=0
 ```
 
 No servidor atual, o `make find-lib` encontrou uma pasta `ref` valida em:
@@ -100,13 +102,21 @@ No servidor atual, o `make find-lib` encontrou uma pasta `ref` valida em:
 /home/ciexpert/maikon.almeida/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
 ```
 
-O Makefile ja tenta esse caminho automaticamente, depois de tentar `../ref`.
-Assim, depois do `git pull`, normalmente basta rodar:
+O Makefile nao usa esse caminho automaticamente. O procedimento didatico correto
+e preparar a arvore `ref` do Lab 03, como a aula de setup fisico recomenda.
+Como nao queremos duplicar arquivos grandes, usamos um link simbolico:
 
 ```bash
-make doctor
-make syn LEVEL=0
+make link-ref SAED32_SOURCE_REF=/home/ciexpert/maikon.almeida/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
 ```
+
+Isso cria:
+
+```text
+~/curso/03/ref -> /home/ciexpert/.../module_CPU_pdk_SAED/ref
+```
+
+Depois disso, `make doctor` e `make syn LEVEL=0` usam simplesmente `../ref`.
 
 Se `make find-lib` nao existir no servidor, o servidor ainda esta com uma versao
 antiga deste lab. Rode:
@@ -182,6 +192,19 @@ garantimos que voce entende `search_path`, `target_library`, `link_library` e
 constraints basicas usando a biblioteca `.db`. O fluxo DC NXT/topographical
 completo, com `create_lib`, `.ndm`, `.tf`, TLUPlus e map file, fica preparado no
 guia para ser o proximo degrau, sem misturar tudo no primeiro contato.
+
+Nos scripts isso aparece assim:
+
+```text
+scripts/common_setup.tcl
+  variaveis editaveis do projeto: ADDL_SEARCH_PATH, TARGET_LIBS,
+  NDM_REFERENCE_LIBS, TECH_FILE, TLUPLUS_MAX_FILE e MAP_FILE.
+
+scripts/dc_setup.tcl
+  aplica search_path, target_library e link_library; e, quando
+  ENABLE_PHYSICAL_SETUP=1, executa create_lib/open_lib, check_library,
+  set_tlu_plus_files e check_tlu_plus_files.
+```
 
 Variaveis principais no nosso Makefile:
 

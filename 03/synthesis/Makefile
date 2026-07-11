@@ -20,7 +20,19 @@
 #       |-- CLIBs/saed32_lvt.ndm
 #       `-- tech/...
 #
-# Caso a biblioteca esteja em outro local:
+# A pasta ref nao e criada pelo Design Compiler. Ela precisa existir antes da
+# sintese, porque vem do pacote/ambiente de bibliotecas da tecnologia.
+#
+# Para este lab, o caminho limpo e criar um link simbolico:
+#
+#   curso/03/ref -> /caminho/para/pasta/ref/fornecida
+#
+# Depois disso os comandos ficam sempre iguais:
+#
+#   make doctor
+#   make syn LEVEL=0
+#
+# Caso queira testar sem criar o link:
 #
 #   make doctor REF_ROOT=/caminho/para/ref
 #   make syn LEVEL=0 REF_ROOT=/caminho/para/ref
@@ -40,28 +52,36 @@ DRIVE_LIB  ?= saed32lvt_ss0p75v125c
 DRIVE_CELL ?= NBUFFX2_LVT
 LOAD_CELL  ?= NBUFFX16_LVT
 
-# Onde o Makefile procura a pasta ref automaticamente.
+# A pasta ref esperada pelo lab.
 #
-# 1. ../ref
-#    E a organizacao mais limpa para este lab:
+# O material da aula "Design Setup for Physical Synthesis" mostra que os
+# arquivos de tecnologia devem ser organizados em pastas como DBs, CLIBs e tech.
+# Por isso o Lab 03 espera:
 #
-#      curso/03/ref/DBs/saed32lvt_ss0p75v125c.db
-#      curso/03/synthesis/Makefile
+#   ../ref/DBs/$(TARGET_DB)
+#   ../ref/CLIBs/saed32_lvt.ndm
+#   ../ref/tech/saed32nm_1p9m.tf
 #
-# 2. $(HOME)/RTL_LAB2/.../module_CPU_pdk_SAED/ref
-#    Foi o caminho encontrado no servidor pelo make find-lib. Mantemos aqui
-#    para voce nao precisar digitar REF_ROOT em todo comando.
-#
-# Se um dia a biblioteca estiver em outro lugar, ainda e possivel sobrescrever:
-#
-#   make doctor REF_ROOT=/caminho/para/ref
-#   make syn LEVEL=0 REF_ROOT=/caminho/para/ref
-SAED32_PROJECT_REF ?= $(HOME)/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
-SAED32_REF_CANDIDATES ?= ../ref $(SAED32_PROJECT_REF)
-AUTO_REF_ROOT := $(firstword $(foreach candidate,$(SAED32_REF_CANDIDATES),$(if $(wildcard $(candidate)/DBs/$(TARGET_DB)),$(candidate))))
-
-REF_ROOT ?= $(if $(AUTO_REF_ROOT),$(AUTO_REF_ROOT),../ref)
+# Este e o procedimento didatico correto: primeiro preparar a arvore ref,
+# depois rodar a sintese. O Makefile nao usa automaticamente caminhos antigos.
+REF_ROOT ?= ../ref
 REF_LIB  ?=
+
+# O caminho abaixo foi encontrado pelo make find-lib no servidor. Ele fica aqui
+# apenas como ajuda para o alvo link-ref, que voce roda explicitamente quando
+# quiser criar o link simbolico ../ref. Nao e usado automaticamente por doctor
+# nem por syn.
+SAED32_SOURCE_REF ?= $(HOME)/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
+
+# Physical setup:
+#
+# Os primeiros niveis deste lab usam sintese logica com dc_shell. A aula tambem
+# mostra create_lib/open_lib, NDM, technology file e TLUPlus para sintese fisica
+# em DC NXT/topographical. Mantemos essa preparacao documentada em dc_setup.tcl,
+# mas ela fica desligada por padrao para nao misturar etapas.
+#
+# Use ENABLE_PHYSICAL_SETUP=1 somente quando quiser estudar essa etapa.
+ENABLE_PHYSICAL_SETUP ?= 0
 
 # Busca controlada. Nao varre todo o /tools indefinidamente.
 SEARCH_ROOTS  ?= $(HOME) /home/ciexpert /tools/pdk/synopsys /tools/synopsys
@@ -76,22 +96,32 @@ REF_LIB_ABS  := $(if $(strip $(REF_LIB)),$(abspath $(REF_LIB)),)
 TARGET_DB_PATH := $(REF_ROOT_ABS)/DBs/$(TARGET_DB)
 CONSTRAINT_FILE := scripts/constraints_level$(LEVEL).tcl
 RTL_FILE := ../rtl/mini_datapath.sv
+REF_DB_DIR := $(REF_ROOT_ABS)/DBs
+REF_CLIB_DIR := $(REF_ROOT_ABS)/CLIBs
+REF_TECH_DIR := $(REF_ROOT_ABS)/tech
+LVT_NDM_PATH := $(REF_CLIB_DIR)/saed32_lvt.ndm
+TECH_FILE_PATH := $(REF_TECH_DIR)/saed32nm_1p9m.tf
+TLUPLUS_MAX_PATH := $(REF_TECH_DIR)/saed32nm_1p9m_Cmax.tluplus
+MAP_FILE_PATH := $(REF_TECH_DIR)/saed32nm_tf_itf_tluplus.map
 
-.PHONY: help doctor show find-lib setup syn gui clean clean-all
+.PHONY: help doctor show find-lib link-ref unlink-ref setup syn gui clean clean-all
 
 help:
 	@echo "Lab 03 - sintese gradual com constraints"
 	@echo
 	@echo "Preparacao recomendada:"
 	@echo "  1. module load designcompiler/W-2024.09-SP5-4"
-	@echo "  2. make doctor"
-	@echo "  3. make syn LEVEL=0"
+	@echo "  2. make find-lib"
+	@echo "  3. make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"
+	@echo "  4. make doctor"
+	@echo "  5. make syn LEVEL=0"
 	@echo
 	@echo "Biblioteca SAED32:"
-	@echo "  O Makefile tenta REF_ROOT automaticamente nesta ordem:"
-	@echo "    1. ../ref"
-	@echo "    2. $(SAED32_PROJECT_REF)"
-	@echo "  Para outro local, use REF_ROOT=/caminho/para/ref."
+	@echo "  O lab espera REF_ROOT=$(REF_ROOT), normalmente ../ref."
+	@echo "  O alvo link-ref cria um link simbolico ../ref para a pasta fornecida."
+	@echo "  Fonte conhecida neste servidor:"
+	@echo "    $(SAED32_SOURCE_REF)"
+	@echo "  Para testar outro local sem link: REF_ROOT=/caminho/para/ref."
 	@echo
 	@echo "Niveis disponiveis:"
 	@echo "  make syn LEVEL=0   Sem constraints reais"
@@ -116,6 +146,7 @@ help:
 	@echo "  make doctor"
 	@echo "  make show LEVEL=0"
 	@echo "  make find-lib"
+	@echo "  make link-ref"
 
 # Verifica tudo o que e obrigatorio antes da sintese.
 # Retorna erro quando algo essencial estiver ausente.
@@ -138,10 +169,18 @@ doctor:
 	else \
 		echo "ERRO: biblioteca SAED32 nao encontrada."; \
 		echo "  Caminho esperado: $(TARGET_DB_PATH)"; \
-		echo "  Opcao 1: coloque a pasta ref em $(REF_ROOT_ABS)"; \
-		echo "  Opcao 2: make doctor REF_ROOT=/caminho/para/ref"; \
-		echo "  Para procurar com limites: make find-lib"; \
+		echo "  Procedimento recomendado:"; \
+		echo "    1. make find-lib"; \
+		echo "    2. make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		echo "    3. make doctor"; \
+		echo "  Alternativa sem link: make doctor REF_ROOT=/caminho/para/ref"; \
 		status=1; \
+	fi; \
+	if [ -f "$(TARGET_DB_PATH)" ]; then \
+		[ -f "$(LVT_NDM_PATH)" ] && echo "OK: NDM encontrado: $(LVT_NDM_PATH)" || echo "AVISO: NDM nao encontrado: $(LVT_NDM_PATH)"; \
+		[ -f "$(TECH_FILE_PATH)" ] && echo "OK: technology file encontrado: $(TECH_FILE_PATH)" || echo "AVISO: technology file nao encontrado: $(TECH_FILE_PATH)"; \
+		[ -f "$(TLUPLUS_MAX_PATH)" ] && echo "OK: TLUPlus encontrado: $(TLUPLUS_MAX_PATH)" || echo "AVISO: TLUPlus nao encontrado: $(TLUPLUS_MAX_PATH)"; \
+		[ -f "$(MAP_FILE_PATH)" ] && echo "OK: map file encontrado: $(MAP_FILE_PATH)" || echo "AVISO: map file nao encontrado: $(MAP_FILE_PATH)"; \
 	fi; \
 	if [ -f "$(RTL_FILE)" ]; then \
 		echo "OK: RTL encontrado: $(RTL_FILE)"; \
@@ -168,14 +207,18 @@ show:
 	@echo "LEVEL:        $(LEVEL)"
 	@echo "RUN_DIR:      $(RUN_DIR)"
 	@echo "REF_ROOT:     $(REF_ROOT_ABS)"
-	@echo "REF_AUTO:     $(AUTO_REF_ROOT)"
-	@echo "REF_CAND:     $(SAED32_REF_CANDIDATES)"
+	@echo "REF_SOURCE:   $(SAED32_SOURCE_REF)  (usado apenas por make link-ref)"
 	@echo "REF_LIB:      $(REF_LIB_ABS)  (legado, opcional)"
 	@echo "TARGET_DB:    $(TARGET_DB)"
 	@echo "TARGET_PATH:  $(TARGET_DB_PATH)"
+	@echo "LVT_NDM:      $(LVT_NDM_PATH)"
+	@echo "TECH_FILE:    $(TECH_FILE_PATH)"
+	@echo "TLUPLUS_MAX:  $(TLUPLUS_MAX_PATH)"
+	@echo "MAP_FILE:     $(MAP_FILE_PATH)"
 	@echo "DRIVE_LIB:    $(DRIVE_LIB)"
 	@echo "DRIVE_CELL:   $(DRIVE_CELL)"
 	@echo "LOAD_CELL:    $(LOAD_CELL)"
+	@echo "PHYS_SETUP:   $(ENABLE_PHYSICAL_SETUP)"
 	@echo "SCRIPT:       scripts/run_dc.tcl"
 	@echo "CONSTRAINT:   $(CONSTRAINT_FILE)"
 
@@ -216,10 +259,45 @@ find-lib:
 	else \
 		echo; \
 		echo "Se apareceu .../ref/DBs/$(TARGET_DB), use:"; \
-		echo "  make doctor REF_ROOT=/caminho/terminado/em/ref"; \
-		echo "  make syn LEVEL=0 REF_ROOT=/caminho/terminado/em/ref"; \
+		echo "  make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		echo "  make doctor"; \
+		echo "  make syn LEVEL=0"; \
 	fi; \
 	rm -f "$$tmp"
+
+link-ref:
+	@echo "--- [LINK-REF] Preparando ../ref ---"; \
+	if [ ! -d "$(SAED32_SOURCE_REF)" ]; then \
+		echo "ERRO: SAED32_SOURCE_REF nao existe: $(SAED32_SOURCE_REF)"; \
+		echo "Use: make link-ref SAED32_SOURCE_REF=/caminho/terminado/em/ref"; \
+		exit 1; \
+	fi; \
+	if [ ! -f "$(SAED32_SOURCE_REF)/DBs/$(TARGET_DB)" ]; then \
+		echo "ERRO: a fonte nao contem DBs/$(TARGET_DB): $(SAED32_SOURCE_REF)"; \
+		exit 1; \
+	fi; \
+	if [ -e "../ref" ] || [ -L "../ref" ]; then \
+		echo "ERRO: ../ref ja existe."; \
+		echo "Se for um link antigo, remova com: make unlink-ref"; \
+		echo "Se for uma pasta real, preserve-a ou remova manualmente com cuidado."; \
+		exit 1; \
+	fi; \
+	ln -s "$(SAED32_SOURCE_REF)" "../ref"; \
+	echo "OK: criado link simbolico:"; \
+	ls -ld "../ref"; \
+	echo "Agora rode: make doctor"
+
+unlink-ref:
+	@if [ -L "../ref" ]; then \
+		echo "--- [UNLINK-REF] Removendo link simbolico ../ref ---"; \
+		rm "../ref"; \
+		echo "OK: link removido."; \
+	elif [ -e "../ref" ]; then \
+		echo "ERRO: ../ref existe, mas nao e link simbolico. Nao vou remover pasta real."; \
+		exit 1; \
+	else \
+		echo "OK: ../ref nao existe."; \
+	fi
 
 setup:
 	@mkdir -p "$(RUN_DIR)" reports mapped unmapped
@@ -229,7 +307,7 @@ setup:
 syn: doctor setup
 	@echo "--- [SYN] Rodando Design Compiler para LEVEL=$(LEVEL) ---"
 	@echo "Log principal: $(RUN_DIR)/dc_level$(LEVEL).log"
-	dc_shell -x "set LAB_LEVEL $(LEVEL); set DESIGN_TOP $(TOP); set DESIGN_WIDTH $(WIDTH); set REF_ROOT_PATH {$(REF_ROOT_ABS)}; set REF_LIB_PATH {$(REF_LIB_ABS)}; set TARGET_DB_NAME {$(TARGET_DB)}; set DRIVE_LIB_NAME {$(DRIVE_LIB)}; set DRIVE_CELL_NAME {$(DRIVE_CELL)}; set LOAD_CELL_NAME {$(LOAD_CELL)}; source -e -v scripts/run_dc.tcl" | tee "$(RUN_DIR)/dc_level$(LEVEL).log"
+	dc_shell -x "set LAB_LEVEL $(LEVEL); set DESIGN_TOP $(TOP); set DESIGN_WIDTH $(WIDTH); set REF_ROOT_PATH {$(REF_ROOT_ABS)}; set REF_LIB_PATH {$(REF_LIB_ABS)}; set TARGET_DB_NAME {$(TARGET_DB)}; set DRIVE_LIB_NAME {$(DRIVE_LIB)}; set DRIVE_CELL_NAME {$(DRIVE_CELL)}; set LOAD_CELL_NAME {$(LOAD_CELL)}; set ENABLE_PHYSICAL_SETUP {$(ENABLE_PHYSICAL_SETUP)}; source -e -v scripts/run_dc.tcl" | tee "$(RUN_DIR)/dc_level$(LEVEL).log"
 
 gui:
 	@if [ ! -f "mapped/$(TOP)_level$(LEVEL)_mapped.ddc" ]; then \

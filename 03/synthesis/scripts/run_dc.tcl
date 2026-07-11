@@ -10,7 +10,7 @@
 #
 # Fluxo, inspirado no lab 04 ces_svrtl_2019.03:
 #
-#   1. carregar setup de biblioteca;
+#   1. carregar setup de biblioteca via scripts/dc_setup.tcl;
 #   2. analisar os arquivos SystemVerilog;
 #   3. elaborar o top parametrizado;
 #   4. fazer link;
@@ -38,7 +38,16 @@ if {![info exists DESIGN_WIDTH]} {
   set DESIGN_WIDTH 8
 }
 
-source scripts/common_setup.tcl
+# dc_setup.tcl carrega common_setup.tcl e aplica:
+#
+#   - search_path;
+#   - target_library;
+#   - link_library;
+#   - setup fisico opcional, quando ENABLE_PHYSICAL_SETUP=1.
+#
+# A aula recomenda essa separacao: common_setup.tcl guarda variaveis editaveis,
+# dc_setup.tcl executa o procedimento reutilizavel.
+source scripts/dc_setup.tcl
 
 set REPORT_DIR   "reports"
 set MAPPED_DIR   "mapped"
