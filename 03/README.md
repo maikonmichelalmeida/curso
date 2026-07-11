@@ -94,6 +94,20 @@ make find-lib
 make syn LEVEL=0 REF_ROOT=/caminho/para/ref
 ```
 
+No servidor atual, o `make find-lib` encontrou uma pasta `ref` valida em:
+
+```text
+/home/ciexpert/maikon.almeida/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
+```
+
+O Makefile ja tenta esse caminho automaticamente, depois de tentar `../ref`.
+Assim, depois do `git pull`, normalmente basta rodar:
+
+```bash
+make doctor
+make syn LEVEL=0
+```
+
 Se `make find-lib` nao existir no servidor, o servidor ainda esta com uma versao
 antiga deste lab. Rode:
 

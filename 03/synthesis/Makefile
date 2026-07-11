@@ -35,14 +35,33 @@ LEVEL ?= 0
 WIDTH ?= 8
 TOP   ?= mini_datapath
 
-# A pasta ref fica, por padrao, ao lado das pastas rtl/, simulation/ e synthesis/.
-REF_ROOT ?= ../ref
-REF_LIB  ?=
-
 TARGET_DB  ?= saed32lvt_ss0p75v125c.db
 DRIVE_LIB  ?= saed32lvt_ss0p75v125c
 DRIVE_CELL ?= NBUFFX2_LVT
 LOAD_CELL  ?= NBUFFX16_LVT
+
+# Onde o Makefile procura a pasta ref automaticamente.
+#
+# 1. ../ref
+#    E a organizacao mais limpa para este lab:
+#
+#      curso/03/ref/DBs/saed32lvt_ss0p75v125c.db
+#      curso/03/synthesis/Makefile
+#
+# 2. $(HOME)/RTL_LAB2/.../module_CPU_pdk_SAED/ref
+#    Foi o caminho encontrado no servidor pelo make find-lib. Mantemos aqui
+#    para voce nao precisar digitar REF_ROOT em todo comando.
+#
+# Se um dia a biblioteca estiver em outro lugar, ainda e possivel sobrescrever:
+#
+#   make doctor REF_ROOT=/caminho/para/ref
+#   make syn LEVEL=0 REF_ROOT=/caminho/para/ref
+SAED32_PROJECT_REF ?= $(HOME)/RTL_LAB2/estudo_ambiente/PROJECT_ENVIROMENT/module_CPU_pdk_SAED/ref
+SAED32_REF_CANDIDATES ?= ../ref $(SAED32_PROJECT_REF)
+AUTO_REF_ROOT := $(firstword $(foreach candidate,$(SAED32_REF_CANDIDATES),$(if $(wildcard $(candidate)/DBs/$(TARGET_DB)),$(candidate))))
+
+REF_ROOT ?= $(if $(AUTO_REF_ROOT),$(AUTO_REF_ROOT),../ref)
+REF_LIB  ?=
 
 # Busca controlada. Nao varre todo o /tools indefinidamente.
 SEARCH_ROOTS  ?= $(HOME) /home/ciexpert /tools/pdk/synopsys /tools/synopsys
@@ -65,9 +84,14 @@ help:
 	@echo
 	@echo "Preparacao recomendada:"
 	@echo "  1. module load designcompiler/W-2024.09-SP5-4"
-	@echo "  2. coloque a pasta ref em ../ref"
-	@echo "  3. make doctor"
-	@echo "  4. make syn LEVEL=0"
+	@echo "  2. make doctor"
+	@echo "  3. make syn LEVEL=0"
+	@echo
+	@echo "Biblioteca SAED32:"
+	@echo "  O Makefile tenta REF_ROOT automaticamente nesta ordem:"
+	@echo "    1. ../ref"
+	@echo "    2. $(SAED32_PROJECT_REF)"
+	@echo "  Para outro local, use REF_ROOT=/caminho/para/ref."
 	@echo
 	@echo "Niveis disponiveis:"
 	@echo "  make syn LEVEL=0   Sem constraints reais"
@@ -144,6 +168,8 @@ show:
 	@echo "LEVEL:        $(LEVEL)"
 	@echo "RUN_DIR:      $(RUN_DIR)"
 	@echo "REF_ROOT:     $(REF_ROOT_ABS)"
+	@echo "REF_AUTO:     $(AUTO_REF_ROOT)"
+	@echo "REF_CAND:     $(SAED32_REF_CANDIDATES)"
 	@echo "REF_LIB:      $(REF_LIB_ABS)  (legado, opcional)"
 	@echo "TARGET_DB:    $(TARGET_DB)"
 	@echo "TARGET_PATH:  $(TARGET_DB_PATH)"
