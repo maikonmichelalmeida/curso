@@ -64,13 +64,7 @@ Thumbs.db
 /enviar_curso.bat
 /scripts/
 /README.md
-/guia/css/*
-/guia/*.html
-!/guia/css/estudo.css
-!/guia/00.html
-!/guia/01.html
-!/guia/02.html
-!/guia/03.html
+/guia/
 
 # ==============================================================================
 # Arquivos grandes de material bruto devem ficar fora deste repo de labs.
