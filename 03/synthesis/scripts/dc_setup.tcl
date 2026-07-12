@@ -15,6 +15,14 @@
 # Para os primeiros niveis do Lab 03, ENABLE_PHYSICAL_SETUP fica 0. Assim voce
 # aprende primeiro sintese logica e constraints. Quando for estudar a parte
 # fisica/topographical, rode com ENABLE_PHYSICAL_SETUP=1.
+#
+# Importante para ler reports:
+#
+#   ENABLE_PHYSICAL_SETUP=0  -> fluxo logico/WLM; usa .db e DesignWare.
+#   ENABLE_PHYSICAL_SETUP=1  -> prepara NDM, technology file, TLUPlus e map.
+#
+# Portanto, se PHYS_SETUP=0 aparecer no Makefile, os arquivos .ndm/.tf/.tluplus
+# podem estar presentes e conferidos pelo doctor, mas nao entram na sintese.
 
 source scripts/common_setup.tcl
 

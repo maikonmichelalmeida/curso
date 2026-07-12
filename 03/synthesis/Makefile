@@ -332,7 +332,7 @@ setup:
 syn: doctor setup
 	@echo "--- [SYN] Rodando Design Compiler para LEVEL=$(LEVEL) ---"
 	@echo "Log principal: $(RUN_DIR)/dc_level$(LEVEL).log"
-	dc_shell -x "set LAB_LEVEL $(LEVEL); set DESIGN_TOP $(TOP); set DESIGN_WIDTH $(WIDTH); set REF_ROOT_PATH {$(REF_ROOT_ABS)}; set REF_LIB_PATH {$(REF_LIB_ABS)}; set TARGET_DB_NAME {$(TARGET_DB)}; set DRIVE_LIB_NAME {$(DRIVE_LIB)}; set DRIVE_CELL_NAME {$(DRIVE_CELL)}; set LOAD_CELL_NAME {$(LOAD_CELL)}; set ENABLE_PHYSICAL_SETUP {$(ENABLE_PHYSICAL_SETUP)}; source -e -v scripts/run_dc.tcl" | tee "$(RUN_DIR)/dc_level$(LEVEL).log"
+	set -o pipefail; dc_shell -x "set LAB_LEVEL $(LEVEL); set DESIGN_TOP $(TOP); set DESIGN_WIDTH $(WIDTH); set REF_ROOT_PATH {$(REF_ROOT_ABS)}; set REF_LIB_PATH {$(REF_LIB_ABS)}; set TARGET_DB_NAME {$(TARGET_DB)}; set DRIVE_LIB_NAME {$(DRIVE_LIB)}; set DRIVE_CELL_NAME {$(DRIVE_CELL)}; set LOAD_CELL_NAME {$(LOAD_CELL)}; set ENABLE_PHYSICAL_SETUP {$(ENABLE_PHYSICAL_SETUP)}; source -e -v scripts/run_dc.tcl" | tee "$(RUN_DIR)/dc_level$(LEVEL).log"
 
 gui:
 	@if [ ! -f "mapped/$(TOP)_level$(LEVEL)_mapped.ddc" ]; then \

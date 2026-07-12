@@ -82,7 +82,18 @@ analyze -format sverilog [list \
 # A multiplicacao/divisao da ALU ficarao maiores, e os relatorios devem mudar.
 elaborate $DESIGN_TOP -param "WIDTH=$DESIGN_WIDTH"
 
-current_design $DESIGN_TOP
+# Quando um modulo parametrizado e elaborado, o DC pode criar um nome
+# especializado, como mini_datapath_WIDTH8. Depois de elaborate, o design
+# elaborado ja fica selecionado. Por isso capturamos o nome real do design
+# atual em vez de tentar adivinhar ou voltar para mini_datapath.
+set ELABORATED_TOP [get_object_name [current_design]]
+if {$ELABORATED_TOP eq ""} {
+  puts "ERRO Lab03: nenhum design ficou selecionado depois de elaborate."
+  exit 1
+}
+
+puts "INFO Lab03: design elaborado e selecionado = $ELABORATED_TOP"
+
 link
 uniquify
 

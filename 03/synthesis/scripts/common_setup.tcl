@@ -10,6 +10,16 @@
 # Em outras palavras: este e o arquivo que voce olha quando quer entender
 # "quais bibliotecas estou usando?" e "onde esta a tecnologia?".
 #
+# Nos primeiros niveis do Lab 03, ENABLE_PHYSICAL_SETUP=0. Nesse modo:
+#
+#   - TARGET_LIBS, apontando para a biblioteca .db, e usado de fato;
+#   - dw_foundation.sldb e usado pelo dc_setup.tcl para DesignWare;
+#   - NDM_REFERENCE_LIBS, TECH_FILE, TLUPLUS_MAX_FILE e MAP_FILE ficam
+#     preparados e documentados, mas nao sao carregados pelo DC.
+#
+# Esses arquivos fisicos entram somente quando voce rodar com
+# ENABLE_PHYSICAL_SETUP=1.
+#
 # A pasta REF_ROOT_PATH deve apontar para uma arvore neste formato:
 #
 #   ref/
