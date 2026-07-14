@@ -13,6 +13,11 @@
 help:
 	@echo "Curso - escolha o laboratorio e a etapa"
 	@echo
+	@echo "Lab 02B - introducao manual a sintese:"
+	@echo "  leia: ~/curso/02B/README.md"
+	@echo "  roteiro: ~/curso/02B/synthesis/roteiro_manual_dc_shell.md"
+	@echo "  nao ha Makefile de sintese neste lab"
+	@echo
 	@echo "Lab 03 - simulacao RTL:"
 	@echo "  cd ~/curso/03/simulation"
 	@echo "  make doctor"
